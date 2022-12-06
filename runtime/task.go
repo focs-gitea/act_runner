@@ -222,7 +222,7 @@ func (t *Task) Run(ctx context.Context, task *runnerv1.Task) error {
 		NoSkipCheckout:        true,
 		PresetGitHubContext:   preset,
 		EventJSON:             string(eventJSON),
-		ContainerNamePrefix:   fmt.Sprintf("GITEA-BOTS-TASK-%d", task.Id),
+		ContainerNamePrefix:   fmt.Sprintf("GITEA-ACTIONS-TASK-%d", task.Id),
 		ContainerMaxLifetime:  maxLifetime,
 		ContainerNetworkMode:  input.containerNetworkMode,
 		DefaultActionInstance: dataContext["gitea_default_actions_url"].GetStringValue(),
