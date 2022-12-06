@@ -165,7 +165,7 @@ func (t *Task) Run(ctx context.Context, task *runnerv1.Task) error {
 	dataContext := task.Context.Fields
 
 	log.Infof("task %v repo is %v %v %v", task.Id, dataContext["repository"].GetStringValue(),
-		dataContext["gitea_default_bots_url"].GetStringValue(),
+		dataContext["gitea_default_actions_url"].GetStringValue(),
 		t.client.Address())
 
 	preset := &model.GithubContext{
@@ -225,7 +225,7 @@ func (t *Task) Run(ctx context.Context, task *runnerv1.Task) error {
 		ContainerNamePrefix:   fmt.Sprintf("GITEA-BOTS-TASK-%d", task.Id),
 		ContainerMaxLifetime:  maxLifetime,
 		ContainerNetworkMode:  input.containerNetworkMode,
-		DefaultActionInstance: dataContext["gitea_default_bots_url"].GetStringValue(),
+		DefaultActionInstance: dataContext["gitea_default_actions_url"].GetStringValue(),
 		PlatformPicker:        t.platformPicker,
 	}
 	r, err := runner.New(config)

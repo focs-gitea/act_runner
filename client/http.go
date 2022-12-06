@@ -12,7 +12,7 @@ import (
 
 // New returns a new runner client.
 func New(endpoint string, uuid, token string, opts ...connect.ClientOption) *HTTPClient {
-	baseURL := strings.TrimRight(endpoint, "/") + "/api/bots"
+	baseURL := strings.TrimRight(endpoint, "/") + "/api/actions"
 
 	opts = append(opts, connect.WithInterceptors(connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
