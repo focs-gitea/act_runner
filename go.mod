@@ -3,9 +3,9 @@ module gitea.com/gitea/act_runner
 go 1.18
 
 require (
-	code.gitea.io/bots-proto-go v0.1.0
-	github.com/avast/retry-go/v4 v4.1.0
-	github.com/bufbuild/connect-go v1.1.0
+	code.gitea.io/actions-proto-go v0.2.0
+	github.com/avast/retry-go/v4 v4.3.1
+	github.com/bufbuild/connect-go v1.3.1
 	github.com/docker/docker v20.10.21+incompatible
 	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
