@@ -157,6 +157,11 @@ func (t *Task) Run(ctx context.Context, task *runnerv1.Task) error {
 	jobID := jobIDs[0]
 	plan = model.CombineWorkflowPlanner(workflow).PlanJob(jobID)
 	job := workflow.GetJob(jobID)
+	// This runner should run all jobs it receives
+	// a condition like failure() would skip a job in the current version of nektos/act,
+	// as long nektos/act knows nothing about it's dependencies
+	// https://github.com/nektos/act/issues/1482
+	job.If.Encode("always()")
 	reporter.ResetSteps(len(job.Steps))
 
 	log.Infof("plan: %+v", plan.Stages[0].Runs)
