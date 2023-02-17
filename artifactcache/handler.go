@@ -149,7 +149,8 @@ func (h *Handler) reserve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok, err := h.engine.Get(cache); err != nil {
+	old := &Cache{}
+	if ok, err := h.engine.Where(builder.Eq{"key": cache.Key, "version": cache.Version}).Get(old); err != nil {
 		responseJson(w, r, 500, err)
 		return
 	} else if !ok {
@@ -164,19 +165,16 @@ func (h *Handler) reserve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !cache.Complete {
+	if !old.Complete {
 		// another job is creating this cache
 		responseJson(w, r, 200)
 		return
 	}
 
-	if cache.Complete {
-		// recreate this cache
-		cache.Complete = false
-		if _, err := h.engine.ID(cache.ID).MustCols("complete").Update(cache); err != nil {
-			responseJson(w, r, 500, err)
-			return
-		}
+	// recreate this cache
+	if _, err := h.engine.ID(cache.ID).Cols("complete", "size").Update(cache); err != nil {
+		responseJson(w, r, 500, err)
+		return
 	}
 	responseJson(w, r, 200, map[string]any{
 		"cacheId": cache.ID,
@@ -248,7 +246,7 @@ func (h *Handler) commit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cache.Complete = true
-	if _, err := h.engine.ID(cache.ID).MustCols("complete").Update(cache); err != nil {
+	if _, err := h.engine.ID(cache.ID).Cols("complete").Update(cache); err != nil {
 		responseJson(w, r, 500, err)
 		return
 	}
@@ -307,7 +305,7 @@ func (h *Handler) findCache(ctx context.Context, keys []string, version string) 
 
 func (h *Handler) useCache(ctx context.Context, id int64) {
 	// keep quiet
-	_, _ = h.engine.Context(ctx).MustCols("used_at").Update(&Cache{
+	_, _ = h.engine.Context(ctx).Cols("used_at").Update(&Cache{
 		ID:     id,
 		UsedAt: time.Now().Unix(),
 	})
@@ -327,7 +325,7 @@ func (h *Handler) gcCache() {
 
 	const (
 		expiration = 30 * 24 * time.Hour
-		timeout    = 30 * time.Minute
+		timeout    = 5 * time.Minute
 	)
 
 	var caches []*Cache
