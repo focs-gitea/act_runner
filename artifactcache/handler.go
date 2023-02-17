@@ -43,7 +43,7 @@ func NewHandler(dir string, port uint16) (*Handler, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := h.engine.Sync(&Cache{}); err != nil {
+	if err := engine.Sync(&Cache{}); err != nil {
 		return nil, err
 	}
 	h.engine = engine
