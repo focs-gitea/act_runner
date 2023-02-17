@@ -14,15 +14,21 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	log "github.com/sirupsen/logrus"
 	_ "modernc.org/sqlite"
 	"xorm.io/builder"
 	"xorm.io/xorm"
+	xorm_log "xorm.io/xorm/log"
 )
 
 const (
 	urlBase = "/_apis/artifactcache"
+)
+
+var (
+	logger = log.StandardLogger().WithField("module", "cache_request")
 )
 
 type Handler struct {
@@ -47,6 +53,8 @@ func NewHandler(dir string, port uint16) (*Handler, error) {
 	if err != nil {
 		return nil, err
 	}
+	engine.SetLogger(xorm_log.NewSimpleLogger(os.Stderr))
+	engine.ShowSQL()
 	if err := engine.Sync(&Cache{}); err != nil {
 		return nil, err
 	}
@@ -59,12 +67,16 @@ func NewHandler(dir string, port uint16) (*Handler, error) {
 	h.storage = storage
 
 	router := chi.NewRouter()
+	router.Use(middleware.RequestLogger(&middleware.DefaultLogFormatter{
+		Logger: logger,
+	}))
 	router.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handler.ServeHTTP(w, r)
 			go h.gcCache()
 		})
 	})
+	router.Use(middleware.Logger)
 	router.Route(urlBase, func(r chi.Router) {
 		r.Get("/cache", h.find)
 		r.Route("/caches", func(r chi.Router) {
@@ -88,7 +100,7 @@ func NewHandler(dir string, port uint16) (*Handler, error) {
 	}
 	go func() {
 		if err := http.Serve(ln, h.router); err != nil {
-			log.Error("http serve: %v", err)
+			logger.Error("http serve: %v", err)
 		}
 	}()
 
@@ -96,7 +108,7 @@ func NewHandler(dir string, port uint16) (*Handler, error) {
 }
 
 func (h *Handler) Addr(ip string) string {
-	return fmt.Sprintf("http://%v:%d", ip, h.port)
+	return fmt.Sprintf("http://%v:%d/", ip, h.port)
 }
 
 // GET /_apis/artifactcache/cache
@@ -153,11 +165,13 @@ func (h *Handler) reserve(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !cache.Complete {
-		responseJson(w, r, 400, fmt.Errorf("cache %v %q: already reserved", cache.ID, cache.Key))
+		// another job is creating this cache
+		responseJson(w, r, 200)
 		return
 	}
 
 	if cache.Complete {
+		// recreate this cache
 		cache.Complete = false
 		if _, err := h.engine.ID(cache.ID).MustCols("complete").Update(cache); err != nil {
 			responseJson(w, r, 500, err)
@@ -295,7 +309,7 @@ func (h *Handler) useCache(ctx context.Context, id int64) {
 	// keep quiet
 	_, _ = h.engine.Context(ctx).MustCols("used_at").Update(&Cache{
 		ID:     id,
-		UsedAt: time.Now(),
+		UsedAt: time.Now().Unix(),
 	})
 }
 
@@ -313,32 +327,36 @@ func (h *Handler) gcCache() {
 
 	const (
 		expiration = 30 * 24 * time.Hour
-		timeout    = time.Minute
+		timeout    = 30 * time.Minute
 	)
 
 	var caches []*Cache
-	if err := sess.Where(builder.And(builder.Lt{"used_at": time.Now().Add(-timeout)}, builder.Eq{"complete": false})).
+	if err := sess.Where(builder.And(builder.Lt{"used_at": time.Now().Add(-timeout).Unix()}, builder.Eq{"complete": false})).
 		Find(&caches); err != nil {
-		log.Warnf("find caches: %v", err)
+		logger.Warnf("find caches: %v", err)
 	} else {
 		for _, cache := range caches {
 			h.storage.Remove(cache.ID)
 			if _, err := sess.Delete(cache); err != nil {
-				log.Warnf("delete cache: %v", err)
+				logger.Warnf("delete cache: %v", err)
+				continue
 			}
+			logger.Infof("deleted cache: %+v", cache)
 		}
 	}
 
 	caches = caches[:0]
-	if err := sess.Where(builder.Lt{"used_at": time.Now().Add(-expiration)}).
+	if err := sess.Where(builder.Lt{"used_at": time.Now().Add(-expiration).Unix()}).
 		Find(&caches); err != nil {
-		log.Warnf("find caches: %v", err)
+		logger.Warnf("find caches: %v", err)
 	} else {
 		for _, cache := range caches {
 			h.storage.Remove(cache.ID)
 			if _, err := sess.Delete(cache); err != nil {
-				log.Warnf("delete cache: %v", err)
+				logger.Warnf("delete cache: %v", err)
+				continue
 			}
+			logger.Infof("deleted cache: %+v", cache)
 		}
 	}
 }

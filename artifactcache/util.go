@@ -2,10 +2,11 @@ package artifactcache
 
 import (
 	"fmt"
-	"github.com/go-chi/render"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-chi/render"
 )
 
 func responseJson(w http.ResponseWriter, r *http.Request, code int, v ...any) {
@@ -13,11 +14,12 @@ func responseJson(w http.ResponseWriter, r *http.Request, code int, v ...any) {
 	if len(v) == 0 || v[0] == nil {
 		render.JSON(w, r, struct{}{})
 	} else if err, ok := v[0].(error); ok {
+		logger.Errorf("%v %v: %v", r.Method, r.RequestURI, err)
 		render.JSON(w, r, map[string]error{
 			"error": err,
 		})
 	} else {
-		render.JSON(w, r, v)
+		render.JSON(w, r, v[0])
 	}
 }
 

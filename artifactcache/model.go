@@ -3,15 +3,15 @@ package artifactcache
 import (
 	"fmt"
 	"net/http"
-	"time"
 )
 
 type Cache struct {
-	ID       int64     `xorm:"pk" json:"-"`
-	Key      string    `xorm:"TEXT index unique(key_version)" json:"key"`
-	Version  string    `xorm:"TEXT unique(key_version)" json:"version"`
-	Complete bool      `xorm:"index(complete_used_at)" json:"-"`
-	UsedAt   time.Time `xorm:"index(complete_used_at) updated" json:"-"`
+	ID       int64  `xorm:"id pk" json:"-"`
+	Key      string `xorm:"TEXT index unique(key_version)" json:"key"`
+	Version  string `xorm:"TEXT unique(key_version)" json:"version"`
+	Size     int64  `json:"cacheSize"`
+	Complete bool   `xorm:"index(complete_used_at)" json:"-"`
+	UsedAt   int64  `xorm:"index(complete_used_at) updated" json:"-"`
 }
 
 // Bind implements render.Binder
