@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -39,6 +40,9 @@ func NewHandler(dir string, port uint16) (*Handler, error) {
 		port: port,
 	}
 
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return nil, err
+	}
 	engine, err := xorm.NewEngine("sqlite", filepath.Join(dir, "sqlite.db"))
 	if err != nil {
 		return nil, err
@@ -64,10 +68,10 @@ func NewHandler(dir string, port uint16) (*Handler, error) {
 	router.Route(urlBase, func(r chi.Router) {
 		r.Get("/cache", h.find)
 		r.Route("/caches", func(r chi.Router) {
-			r.Post("", h.reserve)
+			r.Post("/", h.reserve)
 			r.Route("/{id}", func(r chi.Router) {
-				r.Patch("", h.upload)
-				r.Post("", h.commit)
+				r.Patch("/", h.upload)
+				r.Post("/", h.commit)
 			})
 		})
 		r.Get("/artifacts/{id}", h.get)
