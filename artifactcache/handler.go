@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -37,7 +38,7 @@ func NewHandler(dir string) (*Handler, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := engine.Sync(&Cache{}); err != nil {
+	if err := h.engine.Sync(&Cache{}); err != nil {
 		return nil, err
 	}
 	h.engine = engine
@@ -72,6 +73,20 @@ func NewHandler(dir string) (*Handler, error) {
 
 	h.gcCache()
 	return h, nil
+}
+
+func (h *Handler) Start(addr string) error {
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		if err := http.Serve(ln, h.router); err != nil {
+			log.Error("http serve: %v", err)
+		}
+	}()
+	return nil
 }
 
 // GET /_apis/artifactcache/cache
