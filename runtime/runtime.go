@@ -4,8 +4,10 @@ import (
 	"context"
 	"strings"
 
-	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
+	"gitea.com/gitea/act_runner/artifactcache"
 	"gitea.com/gitea/act_runner/client"
+
+	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
 )
 
 // Runner runs the pipeline.
@@ -15,10 +17,16 @@ type Runner struct {
 	Environ       map[string]string
 	Client        client.Client
 	Labels        []string
+	CacheHandler  *artifactcache.Handler
 }
 
 // Run runs the pipeline stage.
 func (s *Runner) Run(ctx context.Context, task *runnerv1.Task) error {
+	env := map[string]string{}
+	for k, v := range s.Environ {
+		env[k] = v
+	}
+	env["ACTIONS_CACHE_URL"] = s.CacheHandler.Addr("192.168.8.12") // TODO use right ip
 	return NewTask(s.ForgeInstance, task.Id, s.Client, s.Environ, s.platformPicker).Run(ctx, task)
 }
 

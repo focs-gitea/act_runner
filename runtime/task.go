@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
 	"gitea.com/gitea/act_runner/client"
 
+	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
 	"github.com/nektos/act/pkg/artifacts"
 	"github.com/nektos/act/pkg/common"
 	"github.com/nektos/act/pkg/model"

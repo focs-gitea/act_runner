@@ -25,14 +25,19 @@ const (
 )
 
 type Handler struct {
+	port uint16
+
 	engine  *xorm.Engine
 	storage *Storage
 	router  *chi.Mux
-	gc      atomic.Bool
+
+	gc atomic.Bool
 }
 
-func NewHandler(dir string) (*Handler, error) {
-	h := &Handler{}
+func NewHandler(dir string, port uint16) (*Handler, error) {
+	h := &Handler{
+		port: port,
+	}
 
 	engine, err := xorm.NewEngine("sqlite", filepath.Join(dir, "sqlite.db"))
 	if err != nil {
@@ -72,21 +77,22 @@ func NewHandler(dir string) (*Handler, error) {
 	h.router = router
 
 	h.gcCache()
-	return h, nil
-}
 
-func (h *Handler) Start(addr string) error {
-	ln, err := net.Listen("tcp", addr)
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		return err
+		return nil, err
 	}
-
 	go func() {
 		if err := http.Serve(ln, h.router); err != nil {
 			log.Error("http serve: %v", err)
 		}
 	}()
-	return nil
+
+	return h, nil
+}
+
+func (h *Handler) Addr(ip string) string {
+	return fmt.Sprintf("http://%v:%d", ip, h.port)
 }
 
 // GET /_apis/artifactcache/cache

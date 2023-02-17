@@ -3,8 +3,10 @@ package cmd
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"gitea.com/gitea/act_runner/artifactcache"
 	"gitea.com/gitea/act_runner/client"
 	"gitea.com/gitea/act_runner/config"
 	"gitea.com/gitea/act_runner/engine"
@@ -49,6 +51,17 @@ func runDaemon(ctx context.Context, envFile string) func(cmd *cobra.Command, arg
 			}
 		}
 
+		var handler *artifactcache.Handler
+		if home, err := os.UserHomeDir(); err != nil {
+			return err
+		} else {
+			// TODO config for the dir port
+			handler, err = artifactcache.NewHandler(filepath.Join(home, ".cache/actcache"), 21715)
+			if err != nil {
+				return err
+			}
+		}
+
 		var g errgroup.Group
 
 		cli := client.New(
@@ -64,6 +77,7 @@ func runDaemon(ctx context.Context, envFile string) func(cmd *cobra.Command, arg
 			ForgeInstance: cfg.Client.Address,
 			Environ:       cfg.Runner.Environ,
 			Labels:        cfg.Runner.Labels,
+			CacheHandler:  handler,
 		}
 
 		poller := poller.New(
