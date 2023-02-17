@@ -153,13 +153,13 @@ func (h *Handler) reserve(w http.ResponseWriter, r *http.Request) {
 		responseJson(w, r, 500, err)
 		return
 	} else if !ok {
-		id, err := h.engine.Insert(cache)
+		_, err := h.engine.Insert(cache)
 		if err != nil {
 			responseJson(w, r, 500, err)
 			return
 		}
 		responseJson(w, r, 200, map[string]any{
-			"cacheId": id,
+			"cacheId": cache.ID,
 		})
 		return
 	}

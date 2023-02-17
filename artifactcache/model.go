@@ -6,7 +6,7 @@ import (
 )
 
 type Cache struct {
-	ID       int64  `xorm:"id pk" json:"-"`
+	ID       int64  `xorm:"id pk autoincr" json:"-"`
 	Key      string `xorm:"TEXT index unique(key_version)" json:"key"`
 	Version  string `xorm:"TEXT unique(key_version)" json:"version"`
 	Size     int64  `json:"cacheSize"`

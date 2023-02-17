@@ -37,7 +37,7 @@ func (s *Storage) Exist(id int64) (bool, error) {
 
 func (s *Storage) Write(id int64, offset int64, reader io.Reader) error {
 	temp := s.filename(id) + tempExt
-	if err := s.mkdir(temp); err != nil {
+	if err := os.MkdirAll(filepath.Dir(temp), 0o755); err != nil {
 		return err
 	}
 	file, err := os.OpenFile(temp, os.O_RDWR|os.O_CREATE, 0o666)
@@ -76,8 +76,4 @@ func (s *Storage) Remove(id int64) {
 
 func (s *Storage) filename(id int64) string {
 	return filepath.Join(s.rootDir, fmt.Sprint(id))
-}
-
-func (s *Storage) mkdir(filename string) error {
-	return os.Mkdir(filepath.Dir(filename), 0o755)
 }
