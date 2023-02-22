@@ -3,7 +3,6 @@ package artifactcache
 import (
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"os"
@@ -204,12 +203,12 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 		responseJson(w, r, 400, fmt.Errorf("cache %v %q: already complete", cache.ID, cache.Key))
 		return
 	}
-	start, stop, err := parseContentRange(r.Header.Get("Content-Range"))
+	start, _, err := parseContentRange(r.Header.Get("Content-Range"))
 	if err != nil {
 		responseJson(w, r, 400, err)
 		return
 	}
-	if err := h.storage.Write(cache.ID, start, io.LimitReader(r.Body, stop-start)); err != nil {
+	if err := h.storage.Write(cache.ID, start, r.Body); err != nil {
 		responseJson(w, r, 500, err)
 	}
 	h.useCache(r.Context(), id)
@@ -240,7 +239,7 @@ func (h *Handler) commit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.storage.Commit(cache.ID); err != nil {
+	if err := h.storage.Commit(cache.ID, cache.Size); err != nil {
 		responseJson(w, r, 500, err)
 		return
 	}

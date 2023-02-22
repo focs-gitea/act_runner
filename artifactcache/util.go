@@ -15,8 +15,8 @@ func responseJson(w http.ResponseWriter, r *http.Request, code int, v ...any) {
 		render.JSON(w, r, struct{}{})
 	} else if err, ok := v[0].(error); ok {
 		logger.Errorf("%v %v: %v", r.Method, r.RequestURI, err)
-		render.JSON(w, r, map[string]error{
-			"error": err,
+		render.JSON(w, r, map[string]any{
+			"error": err.Error(),
 		})
 	} else {
 		render.JSON(w, r, v[0])
