@@ -57,6 +57,9 @@ func (s *Storage) Commit(id int64, size int64) error {
 		return err
 	}
 
+	if err := os.MkdirAll(filepath.Dir(name), 0o755); err != nil {
+		return err
+	}
 	file, err := os.Create(name)
 	if err != nil {
 		return err
@@ -96,7 +99,7 @@ func (s *Storage) Remove(id int64) {
 }
 
 func (s *Storage) filename(id int64) string {
-	return filepath.Join(s.rootDir, fmt.Sprint(id))
+	return filepath.Join(s.rootDir, fmt.Sprintf("%02x", id%0xff), fmt.Sprint(id))
 }
 
 func (s *Storage) tempDir(id int64) string {
