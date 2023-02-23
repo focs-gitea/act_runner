@@ -56,7 +56,7 @@ func runDaemon(ctx context.Context, envFile string) func(cmd *cobra.Command, arg
 			return err
 		} else {
 			// TODO config for the dir port
-			handler, err = artifactcache.NewHandler(filepath.Join(home, ".cache/actcache"), 21715)
+			handler, err = artifactcache.NewHandler(filepath.Join(home, ".cache/actcache"), ":21715", "http://192.168.8.12:21715")
 			if err != nil {
 				return err
 			}

@@ -31,7 +31,7 @@ var (
 )
 
 type Handler struct {
-	port uint16
+	externalAddr string
 
 	engine  *xorm.Engine
 	storage *Storage
@@ -40,9 +40,9 @@ type Handler struct {
 	gc atomic.Bool
 }
 
-func NewHandler(dir string, port uint16) (*Handler, error) {
+func NewHandler(dir string, addr string, externalAddr string) (*Handler, error) {
 	h := &Handler{
-		port: port,
+		externalAddr: externalAddr,
 	}
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -93,7 +93,7 @@ func NewHandler(dir string, port uint16) (*Handler, error) {
 
 	h.gcCache()
 
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +106,8 @@ func NewHandler(dir string, port uint16) (*Handler, error) {
 	return h, nil
 }
 
-func (h *Handler) Addr(ip string) string {
-	return fmt.Sprintf("http://%v:%d/", ip, h.port)
+func (h *Handler) ExternalURL() string {
+	return h.externalAddr + "/"
 }
 
 // GET /_apis/artifactcache/cache
@@ -135,7 +135,7 @@ func (h *Handler) find(w http.ResponseWriter, r *http.Request) {
 	}
 	responseJson(w, r, 200, map[string]any{
 		"result":          "hit",
-		"archiveLocation": fmt.Sprintf("%s://%s%s/artifacts/%d", r.URL.Scheme, r.URL.Host, urlBase, cache.ID),
+		"archiveLocation": fmt.Sprintf("%s%s/artifacts/%d", h.externalAddr, urlBase, cache.ID),
 		"cacheKey":        cache.Key,
 	})
 }
