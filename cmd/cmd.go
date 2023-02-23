@@ -10,22 +10,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// the version of act_runner
-var version = "develop"
+var version = "0.1.5"
 
 type globalArgs struct {
 	EnvFile string
 }
 
 func Execute(ctx context.Context) {
-	// task := runtime.NewTask("gitea", 0, nil, nil)
-
 	var gArgs globalArgs
 
 	// ./act_runner
 	rootCmd := &cobra.Command{
-		Use:          "act_runner [event name to run]\nIf no event name passed, will default to \"on: push\"",
-		Short:        "Run GitHub actions locally by specifying the event name (e.g. `push`) or an action name directly.",
+		Use:          "runner [command]",
+		Short:        "Start or configure gitea actions runner",
 		Args:         cobra.MaximumNArgs(1),
 		Version:      version,
 		SilenceUsage: true,
