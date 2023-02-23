@@ -19,7 +19,6 @@ import (
 	_ "modernc.org/sqlite"
 	"xorm.io/builder"
 	"xorm.io/xorm"
-	xorm_log "xorm.io/xorm/log"
 )
 
 const (
@@ -52,8 +51,6 @@ func NewHandler(dir string, addr string, externalAddr string) (*Handler, error) 
 	if err != nil {
 		return nil, err
 	}
-	engine.SetLogger(xorm_log.NewSimpleLogger(os.Stderr))
-	engine.ShowSQL()
 	if err := engine.Sync(&Cache{}); err != nil {
 		return nil, err
 	}
@@ -66,9 +63,7 @@ func NewHandler(dir string, addr string, externalAddr string) (*Handler, error) 
 	h.storage = storage
 
 	router := chi.NewRouter()
-	router.Use(middleware.RequestLogger(&middleware.DefaultLogFormatter{
-		Logger: logger,
-	}))
+	router.Use(middleware.RequestLogger(&middleware.DefaultLogFormatter{Logger: logger}))
 	router.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handler.ServeHTTP(w, r)
