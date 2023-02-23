@@ -143,36 +143,23 @@ func (h *Handler) reserve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	old := &Cache{}
-	if ok, err := h.engine.Where(builder.Eq{"key": cache.Key, "version": cache.Version}).Get(old); err != nil {
+	if ok, err := h.engine.Where(builder.Eq{"key": cache.Key, "version": cache.Version}).Get(&Cache{}); err != nil {
 		responseJson(w, r, 500, err)
 		return
-	} else if !ok {
-		_, err := h.engine.Insert(cache)
-		if err != nil {
-			responseJson(w, r, 500, err)
-			return
-		}
-		responseJson(w, r, 200, map[string]any{
-			"cacheId": cache.ID,
-		})
+	} else if ok {
+		responseJson(w, r, 400, fmt.Errorf("already exist"))
 		return
 	}
 
-	if !old.Complete {
-		// another job is creating this cache
-		responseJson(w, r, 200)
-		return
-	}
-
-	// recreate this cache
-	if _, err := h.engine.ID(cache.ID).Cols("complete", "size").Update(cache); err != nil {
+	_, err := h.engine.Insert(cache)
+	if err != nil {
 		responseJson(w, r, 500, err)
 		return
 	}
 	responseJson(w, r, 200, map[string]any{
 		"cacheId": cache.ID,
 	})
+	return
 }
 
 // PATCH /_apis/artifactcache/caches/:id
