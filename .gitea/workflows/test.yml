@@ -1,5 +1,7 @@
 name: checks
-on: [push]
+on: 
+  - push
+  - pull_request
 
 env:
   GOPROXY: https://goproxy.io,direct
