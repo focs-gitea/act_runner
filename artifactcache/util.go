@@ -41,13 +41,14 @@ func parseContentRange(s string) (int64, int64, error) {
 	return start, stop, nil
 }
 
-// engine is a wrapper of *xorm.Engine, with a lock
+// engine is a wrapper of *xorm.Engine, with a lock.
+// To avoid racing of sqlite, we don't careperformance here.
 type engine struct {
 	e *xorm.Engine
 	m sync.Mutex
 }
 
-func (e *engine) Exec(f func(*xorm.Session) error, try ...bool) error {
+func (e *engine) Exec(f func(*xorm.Session) error) error {
 	e.m.Lock()
 	defer e.m.Unlock()
 
@@ -57,7 +58,7 @@ func (e *engine) Exec(f func(*xorm.Session) error, try ...bool) error {
 	return f(sess)
 }
 
-func (e *engine) ExecBool(f func(*xorm.Session) (bool, error), try ...bool) (bool, error) {
+func (e *engine) ExecBool(f func(*xorm.Session) (bool, error)) (bool, error) {
 	e.m.Lock()
 	defer e.m.Unlock()
 
