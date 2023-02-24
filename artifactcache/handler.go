@@ -32,7 +32,7 @@ var (
 type Handler struct {
 	externalAddr string
 
-	engine  *xorm.Engine
+	engine  engine
 	storage *Storage
 	router  *chi.Mux
 
@@ -47,14 +47,14 @@ func NewHandler(dir string, addr string, externalAddr string) (*Handler, error) 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}
-	engine, err := xorm.NewEngine("sqlite", filepath.Join(dir, "sqlite.db"))
+	e, err := xorm.NewEngine("sqlite", filepath.Join(dir, "sqlite.db"))
 	if err != nil {
 		return nil, err
 	}
-	if err := engine.Sync(&Cache{}); err != nil {
+	if err := e.Sync(&Cache{}); err != nil {
 		return nil, err
 	}
-	h.engine = engine
+	h.engine = engine{e: e}
 
 	storage, err := NewStorage(filepath.Join(dir, "cache"))
 	if err != nil {
@@ -124,7 +124,10 @@ func (h *Handler) find(w http.ResponseWriter, r *http.Request) {
 		responseJson(w, r, 500, err)
 		return
 	} else if !ok {
-		_, _ = h.engine.Delete(cache)
+		_ = h.engine.Exec(func(sess *xorm.Session) error {
+			_, err := sess.Delete(cache)
+			return err
+		})
 		responseJson(w, r, 204)
 		return
 	}
@@ -143,7 +146,9 @@ func (h *Handler) reserve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok, err := h.engine.Where(builder.Eq{"key": cache.Key, "version": cache.Version}).Get(&Cache{}); err != nil {
+	if ok, err := h.engine.ExecBool(func(sess *xorm.Session) (bool, error) {
+		return sess.Where(builder.Eq{"key": cache.Key, "version": cache.Version}).Get(&Cache{})
+	}); err != nil {
 		responseJson(w, r, 500, err)
 		return
 	} else if ok {
@@ -151,8 +156,10 @@ func (h *Handler) reserve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.engine.Insert(cache)
-	if err != nil {
+	if err := h.engine.Exec(func(sess *xorm.Session) error {
+		_, err := sess.Insert(cache)
+		return err
+	}); err != nil {
 		responseJson(w, r, 500, err)
 		return
 	}
@@ -173,7 +180,10 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 	cache := &Cache{
 		ID: id,
 	}
-	if ok, err := h.engine.Get(cache); err != nil {
+
+	if ok, err := h.engine.ExecBool(func(sess *xorm.Session) (bool, error) {
+		return sess.Get(cache)
+	}); err != nil {
 		responseJson(w, r, 500, err)
 		return
 	} else if !ok {
@@ -208,7 +218,9 @@ func (h *Handler) commit(w http.ResponseWriter, r *http.Request) {
 	cache := &Cache{
 		ID: id,
 	}
-	if ok, err := h.engine.Get(cache); err != nil {
+	if ok, err := h.engine.ExecBool(func(sess *xorm.Session) (bool, error) {
+		return sess.Get(cache)
+	}); err != nil {
 		responseJson(w, r, 500, err)
 		return
 	} else if !ok {
@@ -227,7 +239,10 @@ func (h *Handler) commit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cache.Complete = true
-	if _, err := h.engine.ID(cache.ID).Cols("complete").Update(cache); err != nil {
+	if err := h.engine.Exec(func(sess *xorm.Session) error {
+		_, err := sess.ID(cache.ID).Cols("complete").Update(cache)
+		return err
+	}); err != nil {
 		responseJson(w, r, 500, err)
 		return
 	}
@@ -261,21 +276,22 @@ func (h *Handler) findCache(ctx context.Context, keys []string, version string) 
 	}
 	key := keys[0] // the first key is for exact match.
 
-	sess := h.engine.NewSession().Context(ctx)
-	defer sess.Close()
-
 	cache := &Cache{}
-	if ok, err := sess.Where(builder.Eq{"key": key, "version": version, "complete": true}).Get(cache); err != nil {
+	if ok, err := h.engine.ExecBool(func(sess *xorm.Session) (bool, error) {
+		return sess.Where(builder.Eq{"key": key, "version": version, "complete": true}).Get(cache)
+	}); err != nil {
 		return nil, err
 	} else if ok {
 		return cache, nil
 	}
 
 	for _, prefix := range keys[1:] {
-		if ok, err := sess.Where(builder.And(
-			builder.Like{"key", prefix + "%"},
-			builder.Eq{"version": version, "complete": true},
-		)).OrderBy("id DESC").Get(cache); err != nil {
+		if ok, err := h.engine.ExecBool(func(sess *xorm.Session) (bool, error) {
+			return sess.Where(builder.And(
+				builder.Like{"key", prefix + "%"},
+				builder.Eq{"version": version, "complete": true},
+			)).OrderBy("id DESC").Get(cache)
+		}); err != nil {
 			return nil, err
 		} else if ok {
 			return cache, nil
@@ -286,9 +302,12 @@ func (h *Handler) findCache(ctx context.Context, keys []string, version string) 
 
 func (h *Handler) useCache(ctx context.Context, id int64) {
 	// keep quiet
-	_, _ = h.engine.Context(ctx).Cols("used_at").Update(&Cache{
-		ID:     id,
-		UsedAt: time.Now().Unix(),
+	_ = h.engine.Exec(func(sess *xorm.Session) error {
+		_, err := sess.Context(ctx).Cols("used_at").Update(&Cache{
+			ID:     id,
+			UsedAt: time.Now().Unix(),
+		})
+		return err
 	})
 }
 
@@ -301,22 +320,24 @@ func (h *Handler) gcCache() {
 	}
 	defer h.gc.Store(false)
 
-	sess := h.engine.NewSession()
-	defer sess.Close()
-
 	const (
 		expiration = 30 * 24 * time.Hour
 		timeout    = 5 * time.Minute
 	)
 
 	var caches []*Cache
-	if err := sess.Where(builder.And(builder.Lt{"used_at": time.Now().Add(-timeout).Unix()}, builder.Eq{"complete": false})).
-		Find(&caches); err != nil {
+	if err := h.engine.Exec(func(sess *xorm.Session) error {
+		return sess.Where(builder.And(builder.Lt{"used_at": time.Now().Add(-timeout).Unix()}, builder.Eq{"complete": false})).
+			Find(&caches)
+	}); err != nil {
 		logger.Warnf("find caches: %v", err)
 	} else {
 		for _, cache := range caches {
 			h.storage.Remove(cache.ID)
-			if _, err := sess.Delete(cache); err != nil {
+			if err := h.engine.Exec(func(sess *xorm.Session) error {
+				_, err := sess.Delete(cache)
+				return err
+			}); err != nil {
 				logger.Warnf("delete cache: %v", err)
 				continue
 			}
@@ -325,13 +346,18 @@ func (h *Handler) gcCache() {
 	}
 
 	caches = caches[:0]
-	if err := sess.Where(builder.Lt{"used_at": time.Now().Add(-expiration).Unix()}).
-		Find(&caches); err != nil {
+	if err := h.engine.Exec(func(sess *xorm.Session) error {
+		return sess.Where(builder.Lt{"used_at": time.Now().Add(-expiration).Unix()}).
+			Find(&caches)
+	}); err != nil {
 		logger.Warnf("find caches: %v", err)
 	} else {
 		for _, cache := range caches {
 			h.storage.Remove(cache.ID)
-			if _, err := sess.Delete(cache); err != nil {
+			if err := h.engine.Exec(func(sess *xorm.Session) error {
+				_, err := sess.Delete(cache)
+				return err
+			}); err != nil {
 				logger.Warnf("delete cache: %v", err)
 				continue
 			}
