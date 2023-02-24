@@ -321,13 +321,14 @@ func (h *Handler) gcCache() {
 	defer h.gc.Store(false)
 
 	const (
-		expiration = 30 * 24 * time.Hour
-		timeout    = 5 * time.Minute
+		keepUsed   = 30 * 24 * time.Hour
+		keepUnused = 7 * 24 * time.Hour
+		keepTemp   = 5 * time.Minute
 	)
 
 	var caches []*Cache
 	if err := h.engine.Exec(func(sess *xorm.Session) error {
-		return sess.Where(builder.And(builder.Lt{"used_at": time.Now().Add(-timeout).Unix()}, builder.Eq{"complete": false})).
+		return sess.Where(builder.And(builder.Lt{"used_at": time.Now().Add(-keepTemp).Unix()}, builder.Eq{"complete": false})).
 			Find(&caches)
 	}); err != nil {
 		logger.Warnf("find caches: %v", err)
@@ -347,7 +348,27 @@ func (h *Handler) gcCache() {
 
 	caches = caches[:0]
 	if err := h.engine.Exec(func(sess *xorm.Session) error {
-		return sess.Where(builder.Lt{"used_at": time.Now().Add(-expiration).Unix()}).
+		return sess.Where(builder.Lt{"used_at": time.Now().Add(-keepUnused).Unix()}).
+			Find(&caches)
+	}); err != nil {
+		logger.Warnf("find caches: %v", err)
+	} else {
+		for _, cache := range caches {
+			h.storage.Remove(cache.ID)
+			if err := h.engine.Exec(func(sess *xorm.Session) error {
+				_, err := sess.Delete(cache)
+				return err
+			}); err != nil {
+				logger.Warnf("delete cache: %v", err)
+				continue
+			}
+			logger.Infof("deleted cache: %+v", cache)
+		}
+	}
+
+	caches = caches[:0]
+	if err := h.engine.Exec(func(sess *xorm.Session) error {
+		return sess.Where(builder.Lt{"created_at": time.Now().Add(-keepUsed).Unix()}).
 			Find(&caches)
 	}); err != nil {
 		logger.Warnf("find caches: %v", err)
