@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
+	"github.com/nektos/act/pkg/common"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -51,15 +53,9 @@ func runDaemon(ctx context.Context, envFile string) func(cmd *cobra.Command, arg
 			}
 		}
 
-		var handler *artifactcache.Handler
-		if home, err := os.UserHomeDir(); err != nil {
+		handler, err := newArtifactcacheHandler()
+		if err != nil {
 			return err
-		} else {
-			// TODO config for the dir port
-			handler, err = artifactcache.NewHandler(filepath.Join(home, ".cache/actcache"), ":21715", "http://192.168.8.12:21715")
-			if err != nil {
-				return err
-			}
 		}
 
 		var g errgroup.Group
@@ -123,4 +119,15 @@ func initLogging(cfg config.Config) {
 	if cfg.Trace {
 		log.SetLevel(log.TraceLevel)
 	}
+}
+
+func newArtifactcacheHandler() (*artifactcache.Handler, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+	// TODO config for the dir and port
+	dir := filepath.Join(home, ".cache/actcache")
+	port := ":21715"
+	return artifactcache.NewHandler(dir, port, fmt.Sprintf("http://%s%s", common.GetOutboundIP().String(), port))
 }
