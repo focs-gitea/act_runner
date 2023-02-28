@@ -36,7 +36,8 @@ type Handler struct {
 	router   *chi.Mux
 	listener net.Listener
 
-	gc atomic.Bool
+	gc   atomic.Bool
+	gcAt time.Time
 }
 
 func NewHandler() (*Handler, error) {
@@ -329,6 +330,13 @@ func (h *Handler) gcCache() {
 		return
 	}
 	defer h.gc.Store(false)
+
+	if time.Since(h.gcAt) < time.Hour {
+		logger.Infof("skip gc: %v", h.gcAt.String())
+		return
+	}
+	h.gcAt = time.Now()
+	logger.Infof("gc: %v", h.gcAt.String())
 
 	const (
 		keepUsed   = 30 * 24 * time.Hour
