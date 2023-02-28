@@ -29,9 +29,7 @@ const (
 	urlBase = "/_apis/artifactcache"
 )
 
-var (
-	logger = log.StandardLogger().WithField("module", "cache_request")
-)
+var logger = log.StandardLogger().WithField("module", "cache_request")
 
 type Handler struct {
 	engine   engine
