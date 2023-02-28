@@ -110,7 +110,7 @@ func NewHandler() (*Handler, error) {
 
 func (h *Handler) ExternalURL() string {
 	// TODO: make the external url configurable if necessary
-	return fmt.Sprintf("http://%s:%s/",
+	return fmt.Sprintf("http://%s:%d",
 		common.GetOutboundIP().String(),
 		h.listener.Addr().(*net.TCPAddr).Port)
 }
@@ -143,7 +143,7 @@ func (h *Handler) find(w http.ResponseWriter, r *http.Request) {
 	}
 	responseJson(w, r, 200, map[string]any{
 		"result":          "hit",
-		"archiveLocation": fmt.Sprintf("%s%s/artifacts/%d", h.externalAddr, urlBase, cache.ID),
+		"archiveLocation": fmt.Sprintf("%s%s/artifacts/%d", h.ExternalURL(), urlBase, cache.ID),
 		"cacheKey":        cache.Key,
 	})
 }

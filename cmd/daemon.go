@@ -54,6 +54,7 @@ func runDaemon(ctx context.Context, envFile string) func(cmd *cobra.Command, arg
 		if err != nil {
 			return err
 		}
+		log.Infof("cache handler listens on: %v", handler.ExternalURL())
 
 		var g errgroup.Group
 
