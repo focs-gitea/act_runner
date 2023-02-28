@@ -7,10 +7,10 @@ import (
 	"context"
 	"strings"
 
+	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
+
 	"gitea.com/gitea/act_runner/artifactcache"
 	"gitea.com/gitea/act_runner/client"
-
-	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
 )
 
 // Runner runs the pipeline.
