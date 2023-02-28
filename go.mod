@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	code.gitea.io/actions-proto-go v0.2.0
+	code.gitea.io/gitea-vet v0.2.3-0.20230113022436-2b1561217fa5
 	github.com/avast/retry-go/v4 v4.3.1
 	github.com/bufbuild/connect-go v1.3.1
 	github.com/docker/docker v20.10.21+incompatible
