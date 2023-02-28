@@ -14,7 +14,6 @@ LINUX_ARCHS ?= linux/amd64,linux/arm64
 DARWIN_ARCHS ?= darwin-12/amd64,darwin-12/arm64
 WINDOWS_ARCHS ?= windows/amd64
 GOFILES := $(shell find . -type f -name "*.go" ! -name "generated.*")
-GO_PACKAGES ?= $(shell $(GO) list ./... | grep -v /vendor/)
 
 ifneq ($(shell uname), Darwin)
 	EXTLDFLAGS = -extldflags "-static" $(null)
@@ -72,9 +71,6 @@ fmt:
 	fi
 	$(GOFMT) -w $(GOFILES)
 
-# vet:
-# 	$(GO) vet ./...
-
 .PHONY: fmt-check
 fmt-check:
 	@hash gofumpt > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
@@ -93,8 +89,8 @@ test: fmt-check
 .PHONY: vet
 vet:
 	@echo "Running go vet..."
-	@GOOS= GOARCH= $(GO) build code.gitea.io/gitea-vet
-	@$(GO) vet -vettool=gitea-vet $(GO_PACKAGES)
+	@$(GO) build code.gitea.io/gitea-vet
+	@$(GO) vet -vettool=gitea-vet ./...
 
 install: $(GOFILES)
 	$(GO) install -v -tags '$(TAGS)' -ldflags '$(EXTLDFLAGS)-s -w $(LDFLAGS)'
