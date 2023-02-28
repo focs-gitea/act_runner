@@ -102,7 +102,7 @@ func NewHandler() (*Handler, error) {
 	}
 	go func() {
 		if err := http.Serve(listener, h.router); err != nil {
-			logger.Error("http serve: %v", err)
+			logger.Errorf("http serve: %v", err)
 		}
 	}()
 	h.listener = listener
