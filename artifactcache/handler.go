@@ -15,6 +15,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/nektos/act/pkg/common"
 	log "github.com/sirupsen/logrus"
 	_ "modernc.org/sqlite"
 	"xorm.io/builder"
@@ -30,23 +31,27 @@ var (
 )
 
 type Handler struct {
-	externalAddr string
-
-	engine  engine
-	storage *Storage
-	router  *chi.Mux
+	engine   engine
+	storage  *Storage
+	router   *chi.Mux
+	listener net.Listener
 
 	gc atomic.Bool
 }
 
-func NewHandler(dir string, addr string, externalAddr string) (*Handler, error) {
-	h := &Handler{
-		externalAddr: externalAddr,
-	}
+func NewHandler() (*Handler, error) {
+	h := &Handler{}
 
+	dir := "" // TODO: make the dir configurable if necessary
+	if home, err := os.UserHomeDir(); err != nil {
+		return nil, err
+	} else {
+		dir = filepath.Join(home, ".cache/actcache")
+	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}
+
 	e, err := xorm.NewEngine("sqlite", filepath.Join(dir, "sqlite.db"))
 	if err != nil {
 		return nil, err
@@ -88,21 +93,26 @@ func NewHandler(dir string, addr string, externalAddr string) (*Handler, error) 
 
 	h.gcCache()
 
-	ln, err := net.Listen("tcp", addr)
+	// TODO: make the port configurable if necessary
+	listener, err := net.Listen("tcp", ":0") // random available port
 	if err != nil {
 		return nil, err
 	}
 	go func() {
-		if err := http.Serve(ln, h.router); err != nil {
+		if err := http.Serve(listener, h.router); err != nil {
 			logger.Error("http serve: %v", err)
 		}
 	}()
+	h.listener = listener
 
 	return h, nil
 }
 
 func (h *Handler) ExternalURL() string {
-	return h.externalAddr + "/"
+	// TODO: make the external url configurable if necessary
+	return fmt.Sprintf("http://%s:%s/",
+		common.GetOutboundIP().String(),
+		h.listener.Addr().(*net.TCPAddr).Port)
 }
 
 // GET /_apis/artifactcache/cache

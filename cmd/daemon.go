@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"gitea.com/gitea/act_runner/artifactcache"
@@ -16,7 +14,6 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
-	"github.com/nektos/act/pkg/common"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -53,7 +50,7 @@ func runDaemon(ctx context.Context, envFile string) func(cmd *cobra.Command, arg
 			}
 		}
 
-		handler, err := newArtifactcacheHandler()
+		handler, err := artifactcache.NewHandler()
 		if err != nil {
 			return err
 		}
@@ -119,15 +116,4 @@ func initLogging(cfg config.Config) {
 	if cfg.Trace {
 		log.SetLevel(log.TraceLevel)
 	}
-}
-
-func newArtifactcacheHandler() (*artifactcache.Handler, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-	// TODO config for the dir and port
-	dir := filepath.Join(home, ".cache/actcache")
-	port := ":21715"
-	return artifactcache.NewHandler(dir, port, fmt.Sprintf("http://%s%s", common.GetOutboundIP().String(), port))
 }
