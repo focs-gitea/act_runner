@@ -3,3 +3,4 @@ act_runner
 .runner
 coverage.txt
 /gitea-vet
+.vscode/
