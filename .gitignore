@@ -3,4 +3,7 @@ act_runner
 .runner
 coverage.txt
 /gitea-vet
-.vscode/
+
+# MS VSCode
+.vscode
+__debug_bin
