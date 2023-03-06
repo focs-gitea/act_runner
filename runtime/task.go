@@ -18,7 +18,6 @@ import (
 	"github.com/nektos/act/pkg/common"
 	"github.com/nektos/act/pkg/model"
 	"github.com/nektos/act/pkg/runner"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 
 	"gitea.com/gitea/act_runner/client"
@@ -249,7 +248,7 @@ func (t *Task) Run(ctx context.Context, task *runnerv1.Task) (lastErr error) {
 	artifactCancel := artifacts.Serve(ctx, input.artifactServerPath, input.artifactServerPort)
 	t.log.Debugf("artifacts server started at %s:%s", input.artifactServerPath, input.artifactServerPort)
 
-	logrus.SetLevel(log.TraceLevel)
+	log.SetLevel(log.TraceLevel)
 	executor := r.NewPlanExecutor(plan).Finally(func(ctx context.Context) error {
 		artifactCancel()
 		return nil
