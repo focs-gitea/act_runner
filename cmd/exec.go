@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"gitea.com/gitea/act_runner/artifactcache"
 	"github.com/joho/godotenv"
 	"github.com/nektos/act/pkg/artifacts"
 	"github.com/nektos/act/pkg/common"
@@ -51,6 +52,7 @@ type executeArgs struct {
 	noSkipCheckout        bool
 	debug                 bool
 	dryrun                bool
+	cacheHandler          *artifactcache.Handler
 }
 
 // WorkflowsPath returns path to workflow file(s)
@@ -116,6 +118,8 @@ func (i *executeArgs) LoadEnvs() map[string]string {
 		}
 	}
 	_ = readEnvs(i.Envfile(), envs)
+
+	envs["ACTIONS_CACHE_URL"] = i.cacheHandler.ExternalURL() + "/"
 
 	return envs
 }
@@ -323,6 +327,14 @@ func runExec(ctx context.Context, execArgs *executeArgs) func(cmd *cobra.Command
 		if deadline, ok := ctx.Deadline(); ok {
 			maxLifetime = time.Until(deadline)
 		}
+
+		// init a cache server
+		handler, err := artifactcache.NewHandler()
+		if err != nil {
+			return err
+		}
+		log.Infof("cache handler listens on: %v", handler.ExternalURL())
+		execArgs.cacheHandler = handler
 
 		// run the plan
 		config := &runner.Config{
