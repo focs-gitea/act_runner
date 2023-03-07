@@ -18,7 +18,6 @@ import (
 	"github.com/nektos/act/pkg/common"
 	"github.com/nektos/act/pkg/model"
 	"github.com/nektos/act/pkg/runner"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -360,11 +359,12 @@ func runExec(ctx context.Context, execArgs *executeArgs) func(cmd *cobra.Command
 			},
 		}
 
-		if execArgs.debug {
-			logrus.SetLevel(log.TraceLevel)
-		} else {
-			logrus.SetLevel(log.InfoLevel)
-		}
+		// TODO: handle log level config
+		// waiting https://gitea.com/gitea/act/pulls/19
+		// if !execArgs.debug {
+		// 	logLevel := log.Level(log.InfoLevel)
+		// 	config.JobLoggerLevel = &logLevel
+		// }
 
 		r, err := runner.New(config)
 		if err != nil {
@@ -385,7 +385,6 @@ func runExec(ctx context.Context, execArgs *executeArgs) func(cmd *cobra.Command
 		log.Debugf("artifacts server started at %s:%s", execArgs.artifactServerPath, execArgs.artifactServerPort)
 
 		ctx = common.WithDryrun(ctx, execArgs.dryrun)
-
 		executor := r.NewPlanExecutor(plan).Finally(func(ctx context.Context) error {
 			artifactCancel()
 			return nil

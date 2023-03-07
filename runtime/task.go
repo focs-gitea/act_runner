@@ -248,7 +248,6 @@ func (t *Task) Run(ctx context.Context, task *runnerv1.Task, runnerName string) 
 	artifactCancel := artifacts.Serve(ctx, input.artifactServerPath, input.artifactServerPort)
 	t.log.Debugf("artifacts server started at %s:%s", input.artifactServerPath, input.artifactServerPort)
 
-	log.SetLevel(log.TraceLevel)
 	executor := r.NewPlanExecutor(plan).Finally(func(ctx context.Context) error {
 		artifactCancel()
 		return nil
