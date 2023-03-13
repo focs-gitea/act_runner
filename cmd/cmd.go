@@ -5,15 +5,13 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
-const version = "0.1.5"
-
-var RunnerVersion = "develop"
+// the version of act_runner
+var version = "develop"
 
 type globalArgs struct {
 	EnvFile string
@@ -26,7 +24,7 @@ func Execute(ctx context.Context) {
 
 	// ./act_runner
 	rootCmd := &cobra.Command{
-		Use:          "act [event name to run]\nIf no event name passed, will default to \"on: push\"",
+		Use:          "act_runner [event name to run]\nIf no event name passed, will default to \"on: push\"",
 		Short:        "Run GitHub actions locally by specifying the event name (e.g. `push`) or an action name directly.",
 		Args:         cobra.MaximumNArgs(1),
 		Version:      version,
@@ -49,16 +47,6 @@ func Execute(ctx context.Context) {
 	registerCmd.Flags().StringVar(&regArgs.RunnerName, "name", "", "Runner name")
 	registerCmd.Flags().StringVar(&regArgs.Labels, "labels", "", "Runner tags, comma separated")
 	rootCmd.AddCommand(registerCmd)
-
-	// ./act_runner version
-	versionCmd := &cobra.Command{
-		Use:   "version",
-		Short: "Print the version of act runner",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("act_runner version %s\n", RunnerVersion)
-		},
-	}
-	rootCmd.AddCommand(versionCmd)
 
 	// ./act_runner daemon
 	daemonCmd := &cobra.Command{

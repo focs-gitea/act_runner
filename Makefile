@@ -62,7 +62,7 @@ else
 endif
 
 TAGS ?=
-LDFLAGS ?= -X "$(RUNNER_CMD_PACKAGE_PATH).RunnerVersion=$(RELASE_VERSION)"
+LDFLAGS ?= -X "$(RUNNER_CMD_PACKAGE_PATH).version=$(RELASE_VERSION)"
 
 all: build
 
