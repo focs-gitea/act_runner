@@ -14,7 +14,7 @@ RUNNER_CMD_PACKAGE_PATH := gitea.com/gitea/act_runner/cmd
 LINUX_ARCHS ?= linux/amd64,linux/arm64
 DARWIN_ARCHS ?= darwin-12/amd64,darwin-12/arm64
 WINDOWS_ARCHS ?= windows/amd64
-GOFILES := $(shell find . -type f -name "*.go" ! -name "generated.*")
+GOFILES := $(shell find . -type f -name "*.go" -o -name "go.mod" ! -name "generated.*")
 
 ifneq ($(shell uname), Darwin)
 	EXTLDFLAGS = -extldflags "-static" $(null)
