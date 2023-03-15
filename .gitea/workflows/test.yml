@@ -5,6 +5,8 @@ on:
 
 env:
   GOPROXY: https://goproxy.io,direct
+  GOPATH: /go_path
+  GOCACHE: /go_cache
 
 jobs:
   lint:
