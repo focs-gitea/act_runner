@@ -159,7 +159,6 @@ func (t *Task) Run(ctx context.Context, task *runnerv1.Task, runnerName, runnerV
 		return err
 	}
 
-	var plan *model.Plan
 	jobIDs := workflow.GetJobIDs()
 	if len(jobIDs) != 1 {
 		err := fmt.Errorf("multiple jobs found: %v", jobIDs)
@@ -167,7 +166,11 @@ func (t *Task) Run(ctx context.Context, task *runnerv1.Task, runnerName, runnerV
 		return err
 	}
 	jobID := jobIDs[0]
-	plan = model.CombineWorkflowPlanner(workflow).PlanJob(jobID)
+	plan, err := model.CombineWorkflowPlanner(workflow).PlanJob(jobID)
+	if err != nil {
+		lastWords = err.Error()
+		return err
+	}
 	job := workflow.GetJob(jobID)
 	reporter.ResetSteps(len(job.Steps))
 
