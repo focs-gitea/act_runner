@@ -1,0 +1,6 @@
+.gitea
+.dockerignore
+.gitignore
+LICENSE
+README.md
+scratch.Dockerfile
