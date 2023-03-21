@@ -13,11 +13,10 @@ RUN apk --no-cache add build-base git
 COPY . ${GOPATH}/src/gitea.com/gitea/act_runner
 WORKDIR ${GOPATH}/src/gitea.com/gitea/act_runner
 
-#Checkout version if set
-RUN if [ -n "${ACT_RUNNER_VERSION}" ]; then git checkout "${ACT_RUNNER_VERSION}"; fi \
- && make clean build
+#Build the binary
+RUN make clean build
 
-FROM alpine:3.6 as alpine
+FROM alpine:3.17 as cacerts
 
 RUN apk add -U --no-cache ca-certificates
 
@@ -26,7 +25,7 @@ LABEL maintainer="maintainers@gitea.io"
 
 ENV GITEA_RUNNER_FILE="/config/.runner"
 
-COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=cacerts /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build-env /go/src/gitea.com/gitea/act_runner/act_runner /runner
 
 ENTRYPOINT ["/runner"]
