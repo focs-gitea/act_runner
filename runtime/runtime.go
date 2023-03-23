@@ -50,6 +50,9 @@ func (s *Runner) platformPicker(labels []string) string {
 			platforms[label] = strings.TrimPrefix(arg, "//")
 		case "host":
 			platforms[label] = "-self-hosted"
+		default:
+			// It should not happen, because ParseLabel has checked it.
+			continue
 		}
 	}
 
