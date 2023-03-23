@@ -6,7 +6,6 @@ package cmd
 import (
 	"context"
 	"os"
-	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
@@ -38,8 +37,8 @@ func runDaemon(ctx context.Context, envFile string) func(cmd *cobra.Command, arg
 		// require docker if a runner label uses a docker backend
 		needsDocker := false
 		for _, l := range cfg.Runner.Labels {
-			splits := strings.SplitN(l, ":", 2)
-			if len(splits) == 2 && strings.HasPrefix(splits[1], "docker:") {
+			_, schema, _, _ := runtime.ParseLabel(l)
+			if schema == "docker" {
 				needsDocker = true
 				break
 			}
