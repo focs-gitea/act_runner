@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"runtime"
+	goruntime "runtime"
 	"strings"
 	"time"
 
@@ -23,6 +23,7 @@ import (
 	"gitea.com/gitea/act_runner/client"
 	"gitea.com/gitea/act_runner/config"
 	"gitea.com/gitea/act_runner/register"
+	"gitea.com/gitea/act_runner/runtime"
 )
 
 // runRegister registers a runner to the server
@@ -37,7 +38,7 @@ func runRegister(ctx context.Context, regArgs *registerArgs, envFile string) fun
 		log.SetLevel(log.DebugLevel)
 
 		log.Infof("Registering runner, arch=%s, os=%s, version=%s.",
-			runtime.GOARCH, runtime.GOOS, version)
+			goruntime.GOARCH, goruntime.GOOS, version)
 
 		// runner always needs root permission
 		if os.Getuid() != 0 {
@@ -121,11 +122,9 @@ func (r *registerInputs) validate() error {
 
 func validateLabels(labels []string) error {
 	for _, label := range labels {
-		values := strings.SplitN(label, ":", 2)
-		if len(values) != 2 {
-			return fmt.Errorf("Invalid label: %s", label)
+		if _, _, _, err := runtime.ParseLabel(label); err != nil {
+			return err
 		}
-		// TODO: validate value format, like docker://node:16-buster
 	}
 	return nil
 }

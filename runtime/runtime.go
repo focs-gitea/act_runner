@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
+	log "github.com/sirupsen/logrus"
 
 	"gitea.com/gitea/act_runner/artifactcache"
 	"gitea.com/gitea/act_runner/client"
@@ -35,25 +36,20 @@ func (s *Runner) Run(ctx context.Context, task *runnerv1.Task) error {
 }
 
 func (s *Runner) platformPicker(labels []string) string {
-	// "ubuntu-18.04:docker://node:16-buster"
-	// "linux_arm:host"
-
 	platforms := make(map[string]string, len(s.Labels))
 	for _, l := range s.Labels {
-		// "ubuntu-18.04:docker://node:16-buster"
-		splits := strings.SplitN(l, ":", 2)
-		if len(splits) != 2 {
+		label, schema, arg, err := ParseLabel(l)
+		if err != nil {
+			log.Errorf("invaid label %q: %v", l, err)
 			continue
 		}
-		// ["ubuntu-18.04", "docker://node:16-buster"]
-		k, v := splits[0], splits[1]
 
-		switch {
-		case strings.HasPrefix(v, "docker:"):
+		switch schema {
+		case "docker":
 			// TODO "//" will be ignored, maybe we should use 'ubuntu-18.04:docker:node:16-buster' instead
-			platforms[k] = strings.TrimPrefix(strings.TrimPrefix(v, "docker:"), "//")
-		case v == "host":
-			platforms[k] = "-self-hosted"
+			platforms[label] = strings.TrimPrefix(arg, "//")
+		case "host":
+			platforms[label] = "-self-hosted"
 		}
 	}
 
