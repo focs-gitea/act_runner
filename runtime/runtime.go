@@ -42,12 +42,7 @@ func (s *Runner) platformPicker(labels []string) string {
 	for _, l := range s.Labels {
 		// "ubuntu-18.04:docker://node:16-buster"
 		splits := strings.SplitN(l, ":", 2)
-		if len(splits) != 1 {
-			continue
-		}
-		if len(splits) == 1 {
-			// identifier for non docker execution environment
-			platforms[splits[0]] = "-self-hosted"
+		if len(splits) != 2 {
 			continue
 		}
 		// ["ubuntu-18.04", "docker://node:16-buster"]
