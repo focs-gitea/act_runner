@@ -36,12 +36,15 @@ func (s *Runner) Run(ctx context.Context, task *runnerv1.Task) error {
 
 func (s *Runner) platformPicker(labels []string) string {
 	// "ubuntu-18.04:docker://node:16-buster"
-	// "self-hosted"
+	// "linux_arm:host"
 
 	platforms := make(map[string]string, len(labels))
 	for _, l := range s.Labels {
 		// "ubuntu-18.04:docker://node:16-buster"
 		splits := strings.SplitN(l, ":", 2)
+		if len(splits) != 1 {
+			continue
+		}
 		if len(splits) == 1 {
 			// identifier for non docker execution environment
 			platforms[splits[0]] = "-self-hosted"
@@ -50,13 +53,13 @@ func (s *Runner) platformPicker(labels []string) string {
 		// ["ubuntu-18.04", "docker://node:16-buster"]
 		k, v := splits[0], splits[1]
 
-		if prefix := "docker://"; !strings.HasPrefix(v, prefix) {
-			continue
-		} else {
-			v = strings.TrimPrefix(v, prefix)
+		switch {
+		case strings.HasPrefix(v, "docker:"):
+			// TODO "//" will be ignored, maybe we should use 'ubuntu-18.04:docker:node:16-buster' instead
+			platforms[k] = strings.TrimPrefix(strings.TrimPrefix(v, "docker:"), "//")
+		case v == "host":
+			platforms[k] = "-self-hosted"
 		}
-		// ubuntu-18.04 => node:16-buster
-		platforms[k] = v
 	}
 
 	for _, label := range labels {
@@ -71,6 +74,8 @@ func (s *Runner) platformPicker(labels []string) string {
 	//   ["with-gpu"] => "linux:with-gpu"
 	//   ["ubuntu-22.04", "with-gpu"] => "ubuntu:22.04_with-gpu"
 
-	// return default
-	return "node:16-bullseye"
+	// return default.
+	// So the runner receives a task with a label that the runner doesn't have,
+	// it happens when the user have edited the label of the runner in the web UI.
+	return "node:16-bullseye" // TODO: it may be not correct, what if the runner is used as host mode only?
 }

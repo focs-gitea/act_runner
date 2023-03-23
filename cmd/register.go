@@ -14,15 +14,15 @@ import (
 	"time"
 
 	pingv1 "code.gitea.io/actions-proto-go/ping/v1"
-	"gitea.com/gitea/act_runner/client"
-	"gitea.com/gitea/act_runner/config"
-	"gitea.com/gitea/act_runner/register"
-
 	"github.com/bufbuild/connect-go"
 	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
+	"gitea.com/gitea/act_runner/client"
+	"gitea.com/gitea/act_runner/config"
+	"gitea.com/gitea/act_runner/register"
 )
 
 // runRegister registers a runner to the server
@@ -122,10 +122,9 @@ func (r *registerInputs) validate() error {
 func validateLabels(labels []string) error {
 	for _, label := range labels {
 		values := strings.SplitN(label, ":", 2)
-		if len(values) > 2 {
+		if len(values) != 2 {
 			return fmt.Errorf("Invalid label: %s", label)
 		}
-		// len(values) == 1, label for non docker execution environment
 		// TODO: validate value format, like docker://node:16-buster
 	}
 	return nil
@@ -167,7 +166,7 @@ func (r *registerInputs) assignToNext(stage registerStage, value string) registe
 		}
 
 		if validateLabels(r.CustomLabels) != nil {
-			log.Infoln("Invalid labels, please input again, leave blank to use the default labels (for example, ubuntu-20.04:docker://node:16-bullseye,ubuntu-18.04:docker://node:16-buster)")
+			log.Infoln("Invalid labels, please input again, leave blank to use the default labels (for example, ubuntu-20.04:docker://node:16-bullseye,ubuntu-18.04:docker://node:16-buster,linux_arm:host)")
 			return StageInputCustomLabels
 		}
 		return StageWaitingForRegistration
@@ -231,7 +230,7 @@ func printStageHelp(stage registerStage) {
 		hostname, _ := os.Hostname()
 		log.Infof("Enter the runner name (if set empty, use hostname: %s):\n", hostname)
 	case StageInputCustomLabels:
-		log.Infoln("Enter the runner labels, leave blank to use the default labels (comma-separated, for example, self-hosted,ubuntu-20.04:docker://node:16-bullseye,ubuntu-18.04:docker://node:16-buster):")
+		log.Infoln("Enter the runner labels, leave blank to use the default labels (comma-separated, for example, ubuntu-20.04:docker://node:16-bullseye,ubuntu-18.04:docker://node:16-buster,linux_arm:host):")
 	case StageWaitingForRegistration:
 		log.Infoln("Waiting for registration...")
 	}
