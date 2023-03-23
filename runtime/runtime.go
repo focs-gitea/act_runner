@@ -38,7 +38,7 @@ func (s *Runner) platformPicker(labels []string) string {
 	// "ubuntu-18.04:docker://node:16-buster"
 	// "linux_arm:host"
 
-	platforms := make(map[string]string, len(labels))
+	platforms := make(map[string]string, len(s.Labels))
 	for _, l := range s.Labels {
 		// "ubuntu-18.04:docker://node:16-buster"
 		splits := strings.SplitN(l, ":", 2)
