@@ -29,7 +29,7 @@ type Config struct {
 		Enabled *bool  `yaml:"enabled"` // pointer to distinguish between false and not set, and it will be true if not set
 		Dir     string `yaml:"dir"`
 		Host    string `yaml:"host"`
-		Port    int    `yaml:"port"`
+		Port    uint16 `yaml:"port"`
 	} `yaml:"cache"`
 }
 
