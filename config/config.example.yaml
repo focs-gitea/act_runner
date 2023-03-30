@@ -1,4 +1,4 @@
-# Example configuration file, it's safe to copy this as the default config file.
+# Example configuration file, it's safe to copy this as the default config file without any modification.
 
 log:
   # The level of logging, can be trace, debug, info, warn, error, fatal

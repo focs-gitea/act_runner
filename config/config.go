@@ -97,10 +97,10 @@ func compatibleWithOldEnvs(fileUsed bool, cfg *Config) {
 	handleEnv := func(key string) (string, bool) {
 		if v, ok := os.LookupEnv(key); ok {
 			if fileUsed {
-				log.Warn("env %q has been ignored because config file is used", key)
+				log.Warnf("env %s has been ignored because config file is used", key)
 				return "", false
 			}
-			log.Warn("env %q will be deprecated, please use config file instead", key)
+			log.Warnf("env %s will be deprecated, please use config file instead", key)
 			return v, true
 		}
 		return "", false
