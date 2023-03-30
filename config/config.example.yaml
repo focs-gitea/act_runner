@@ -1,7 +1,7 @@
 # Example configuration file, it's safe to copy this as the default config file.
 
 log:
-  # The level of logging, can be debug, info, warn, error, fatal
+  # The level of logging, can be trace, debug, info, warn, error, fatal
   level: info
 
 runner:
@@ -19,6 +19,8 @@ runner:
   # Please note that the Gitea instance also has a timeout (3h by default) for the job.
   # So the job could be stopped by the Gitea instance if it's timeout is shorter than this.
   timeout: 3h
+  # Whether skip verifying the TLS certificate of the Gitea instance.
+  insecure: false
 
 cache:
   # Enable cache server to use actions/cache.

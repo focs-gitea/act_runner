@@ -15,7 +15,6 @@ import (
 
 	pingv1 "code.gitea.io/actions-proto-go/ping/v1"
 	"github.com/bufbuild/connect-go"
-	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -27,7 +26,7 @@ import (
 )
 
 // runRegister registers a runner to the server
-func runRegister(ctx context.Context, regArgs *registerArgs, envFile string) func(*cobra.Command, []string) error {
+func runRegister(ctx context.Context, regArgs *registerArgs, configFile string) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		log.SetReportCaller(false)
 		isTerm := isatty.IsTerminal(os.Stdout.Fd())
@@ -47,12 +46,12 @@ func runRegister(ctx context.Context, regArgs *registerArgs, envFile string) fun
 		}
 
 		if regArgs.NoInteractive {
-			if err := registerNoInteractive(envFile, regArgs); err != nil {
+			if err := registerNoInteractive(configFile, regArgs); err != nil {
 				return err
 			}
 		} else {
 			go func() {
-				if err := registerInteractive(envFile); err != nil {
+				if err := registerInteractive(configFile); err != nil {
 					// log.Errorln(err)
 					os.Exit(2)
 					return
@@ -73,7 +72,6 @@ func runRegister(ctx context.Context, regArgs *registerArgs, envFile string) fun
 type registerArgs struct {
 	NoInteractive bool
 	InstanceAddr  string
-	Insecure      bool
 	Token         string
 	RunnerName    string
 	Labels        string
@@ -101,7 +99,6 @@ var defaultLabels = []string{
 
 type registerInputs struct {
 	InstanceAddr string
-	Insecure     bool
 	Token        string
 	RunnerName   string
 	CustomLabels []string
@@ -173,16 +170,17 @@ func (r *registerInputs) assignToNext(stage registerStage, value string) registe
 	return StageUnknown
 }
 
-func registerInteractive(envFile string) error {
+func registerInteractive(configFile string) error {
 	var (
 		reader = bufio.NewReader(os.Stdin)
 		stage  = StageInputInstance
 		inputs = new(registerInputs)
 	)
 
-	// check if overwrite local config
-	_ = godotenv.Load(envFile)
-	cfg, _ := config.FromEnviron()
+	cfg, err := config.LoadDefault(configFile)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %v", err)
+	}
 	if f, err := os.Stat(cfg.Runner.File); err == nil && !f.IsDir() {
 		stage = StageOverwriteLocalConfig
 	}
@@ -198,7 +196,7 @@ func registerInteractive(envFile string) error {
 
 		if stage == StageWaitingForRegistration {
 			log.Infof("Registering runner, name=%s, instance=%s, labels=%v.", inputs.RunnerName, inputs.InstanceAddr, inputs.CustomLabels)
-			if err := doRegister(&cfg, inputs); err != nil {
+			if err := doRegister(cfg, inputs); err != nil {
 				log.Errorf("Failed to register runner: %v", err)
 			} else {
 				log.Infof("Runner registered successfully.")
@@ -235,12 +233,13 @@ func printStageHelp(stage registerStage) {
 	}
 }
 
-func registerNoInteractive(envFile string, regArgs *registerArgs) error {
-	_ = godotenv.Load(envFile)
-	cfg, _ := config.FromEnviron()
+func registerNoInteractive(configFile string, regArgs *registerArgs) error {
+	cfg, err := config.LoadDefault(configFile)
+	if err != nil {
+		return err
+	}
 	inputs := &registerInputs{
 		InstanceAddr: regArgs.InstanceAddr,
-		Insecure:     regArgs.Insecure,
 		Token:        regArgs.Token,
 		RunnerName:   regArgs.RunnerName,
 		CustomLabels: defaultLabels,
@@ -257,7 +256,7 @@ func registerNoInteractive(envFile string, regArgs *registerArgs) error {
 		log.WithError(err).Errorf("Invalid input, please re-run act command.")
 		return nil
 	}
-	if err := doRegister(&cfg, inputs); err != nil {
+	if err := doRegister(cfg, inputs); err != nil {
 		log.Errorf("Failed to register runner: %v", err)
 		return nil
 	}
@@ -265,13 +264,13 @@ func registerNoInteractive(envFile string, regArgs *registerArgs) error {
 	return nil
 }
 
-func doRegister(cfg *config.OldConfig, inputs *registerInputs) error {
+func doRegister(cfg *config.Config, inputs *registerInputs) error {
 	ctx := context.Background()
 
 	// initial http client
 	cli := client.New(
 		inputs.InstanceAddr,
-		inputs.Insecure,
+		cfg.Runner.Insecure,
 		"",
 		"",
 		version,
@@ -300,9 +299,18 @@ func doRegister(cfg *config.OldConfig, inputs *registerInputs) error {
 		}
 	}
 
-	cfg.Runner.Name = inputs.RunnerName
-	cfg.Runner.Token = inputs.Token
-	cfg.Runner.Labels = inputs.CustomLabels
-	_, err := register.New(cli).Register(ctx, cfg.Runner)
-	return err
+	reg := &config.Registration{
+		Name:    inputs.RunnerName,
+		Token:   inputs.Token,
+		Address: inputs.InstanceAddr,
+		Labels:  inputs.CustomLabels,
+	}
+
+	if err := register.New(cli).Register(ctx, reg); err != nil {
+		return fmt.Errorf("failed to register runner: %w", err)
+	}
+	if err := config.SaveRegistration(cfg.Runner.File, reg); err != nil {
+		return fmt.Errorf("failed to save runner config: %w", err)
+	}
+	return nil
 }

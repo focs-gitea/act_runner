@@ -13,15 +13,7 @@ import (
 // the version of act_runner
 var version = "develop"
 
-type globalArgs struct {
-	EnvFile string
-}
-
 func Execute(ctx context.Context) {
-	// task := runtime.NewTask("gitea", 0, nil, nil)
-
-	var gArgs globalArgs
-
 	// ./act_runner
 	rootCmd := &cobra.Command{
 		Use:          "act_runner [event name to run]\nIf no event name passed, will default to \"on: push\"",
@@ -30,7 +22,8 @@ func Execute(ctx context.Context) {
 		Version:      version,
 		SilenceUsage: true,
 	}
-	rootCmd.PersistentFlags().StringVarP(&gArgs.EnvFile, "env-file", "", ".env", "Read in a file of environment variables.")
+	configFile := ""
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Config file path")
 
 	// ./act_runner register
 	var regArgs registerArgs
@@ -38,7 +31,7 @@ func Execute(ctx context.Context) {
 		Use:   "register",
 		Short: "Register a runner to the server",
 		Args:  cobra.MaximumNArgs(0),
-		RunE:  runRegister(ctx, &regArgs, gArgs.EnvFile), // must use a pointer to regArgs
+		RunE:  runRegister(ctx, &regArgs, configFile), // must use a pointer to regArgs
 	}
 	registerCmd.Flags().BoolVar(&regArgs.NoInteractive, "no-interactive", false, "Disable interactive mode")
 	registerCmd.Flags().StringVar(&regArgs.InstanceAddr, "instance", "", "Gitea instance address")
@@ -53,7 +46,7 @@ func Execute(ctx context.Context) {
 		Use:   "daemon",
 		Short: "Run as a runner daemon",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  runDaemon(ctx, gArgs.EnvFile),
+		RunE:  runDaemon(ctx, configFile),
 	}
 	rootCmd.AddCommand(daemonCmd)
 
