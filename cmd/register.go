@@ -26,7 +26,7 @@ import (
 )
 
 // runRegister registers a runner to the server
-func runRegister(ctx context.Context, regArgs *registerArgs, configFile string) func(*cobra.Command, []string) error {
+func runRegister(ctx context.Context, regArgs *registerArgs, configFile *string) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		log.SetReportCaller(false)
 		isTerm := isatty.IsTerminal(os.Stdout.Fd())
@@ -46,14 +46,13 @@ func runRegister(ctx context.Context, regArgs *registerArgs, configFile string) 
 		}
 
 		if regArgs.NoInteractive {
-			if err := registerNoInteractive(configFile, regArgs); err != nil {
+			if err := registerNoInteractive(*configFile, regArgs); err != nil {
 				return err
 			}
 		} else {
 			go func() {
-				if err := registerInteractive(configFile); err != nil {
-					// log.Errorln(err)
-					os.Exit(2)
+				if err := registerInteractive(*configFile); err != nil {
+					log.Fatal(err)
 					return
 				}
 				os.Exit(0)

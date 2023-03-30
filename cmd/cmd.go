@@ -31,7 +31,7 @@ func Execute(ctx context.Context) {
 		Use:   "register",
 		Short: "Register a runner to the server",
 		Args:  cobra.MaximumNArgs(0),
-		RunE:  runRegister(ctx, &regArgs, configFile), // must use a pointer to regArgs
+		RunE:  runRegister(ctx, &regArgs, &configFile), // must use a pointer to regArgs
 	}
 	registerCmd.Flags().BoolVar(&regArgs.NoInteractive, "no-interactive", false, "Disable interactive mode")
 	registerCmd.Flags().StringVar(&regArgs.InstanceAddr, "instance", "", "Gitea instance address")
@@ -45,7 +45,7 @@ func Execute(ctx context.Context) {
 		Use:   "daemon",
 		Short: "Run as a runner daemon",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  runDaemon(ctx, configFile),
+		RunE:  runDaemon(ctx, &configFile),
 	}
 	rootCmd.AddCommand(daemonCmd)
 

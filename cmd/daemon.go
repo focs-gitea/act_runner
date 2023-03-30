@@ -21,11 +21,11 @@ import (
 	"gitea.com/gitea/act_runner/runtime"
 )
 
-func runDaemon(ctx context.Context, configFile string) func(cmd *cobra.Command, args []string) error {
+func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		log.Infoln("Starting runner daemon")
 
-		cfg, err := config.LoadDefault(configFile)
+		cfg, err := config.LoadDefault(*configFile)
 		if err != nil {
 			return fmt.Errorf("invalid configuration: %w", err)
 		}
