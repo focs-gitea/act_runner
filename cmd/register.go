@@ -265,7 +265,7 @@ func registerNoInteractive(envFile string, regArgs *registerArgs) error {
 	return nil
 }
 
-func doRegister(cfg *config.Config, inputs *registerInputs) error {
+func doRegister(cfg *config.OldConfig, inputs *registerInputs) error {
 	ctx := context.Background()
 
 	// initial http client

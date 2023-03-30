@@ -108,7 +108,7 @@ func runDaemon(ctx context.Context, envFile string) func(cmd *cobra.Command, arg
 }
 
 // initLogging setup the global logrus logger.
-func initLogging(cfg config.Config) {
+func initLogging(cfg config.OldConfig) {
 	isTerm := isatty.IsTerminal(os.Stdout.Fd())
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors: !isTerm,
