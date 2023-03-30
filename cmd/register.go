@@ -14,6 +14,7 @@ import (
 	"time"
 
 	pingv1 "code.gitea.io/actions-proto-go/ping/v1"
+	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
 	"github.com/bufbuild/connect-go"
 	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
@@ -21,7 +22,6 @@ import (
 
 	"gitea.com/gitea/act_runner/client"
 	"gitea.com/gitea/act_runner/config"
-	"gitea.com/gitea/act_runner/register"
 	"gitea.com/gitea/act_runner/runtime"
 )
 
@@ -306,9 +306,27 @@ func doRegister(cfg *config.Config, inputs *registerInputs) error {
 		Labels:  inputs.CustomLabels,
 	}
 
-	if err := register.New(cli).Register(ctx, reg); err != nil {
-		return fmt.Errorf("failed to register runner: %w", err)
+	labels := make([]string, len(reg.Labels))
+	for i, v := range reg.Labels {
+		l, _, _, _ := runtime.ParseLabel(v)
+		labels[i] = l
 	}
+	// register new runner.
+	resp, err := cli.Register(ctx, connect.NewRequest(&runnerv1.RegisterRequest{
+		Name:        reg.Name,
+		Token:       reg.Token,
+		AgentLabels: labels,
+	}))
+	if err != nil {
+		log.WithError(err).Error("poller: cannot register new runner")
+		return err
+	}
+
+	reg.ID = resp.Msg.Runner.Id
+	reg.UUID = resp.Msg.Runner.Uuid
+	reg.Name = resp.Msg.Runner.Name
+	reg.Token = resp.Msg.Runner.Token
+
 	if err := config.SaveRegistration(cfg.Runner.File, reg); err != nil {
 		return fmt.Errorf("failed to save runner config: %w", err)
 	}
