@@ -5,7 +5,5 @@ package config
 
 import _ "embed"
 
-var (
-	//go:embed config.example.yaml
-	Example []byte
-)
+//go:embed config.example.yaml
+var Example []byte
