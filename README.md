@@ -70,10 +70,10 @@ If the registry succeed, it will run immediately. Next time, you could run the r
 ### Configuration
 
 You can also configure the runner with a configuration file.
-The configuration file is a YAML file, you can generate a sample configuration file with `./act_runner config`.
+The configuration file is a YAML file, you can generate a sample configuration file with `./act_runner generate-config`.
 
 ```bash
-./act_runner config > config.yaml
+./act_runner generate-config > config.yaml
 ```
 
 You can specify the configuration file path with `-c`/`--config` argument.

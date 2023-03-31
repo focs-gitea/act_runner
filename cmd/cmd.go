@@ -57,7 +57,7 @@ func Execute(ctx context.Context) {
 
 	// ./act_runner config
 	rootCmd.AddCommand(&cobra.Command{
-		Use:   "config",
+		Use:   "generate-config",
 		Short: "Generate an example config file",
 		Args:  cobra.MaximumNArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
