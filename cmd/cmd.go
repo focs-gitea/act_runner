@@ -52,6 +52,16 @@ func Execute(ctx context.Context) {
 	// ./act_runner exec
 	rootCmd.AddCommand(loadExecCmd(ctx))
 
+	// ./act_runner config
+	configCmd := &cobra.Command{
+		Use:   "config",
+		Short: "Generate an example config file",
+		Args:  cobra.MaximumNArgs(0),
+		RunE:  runConfig,
+	}
+	configCmd.Flags().String("path", "config.yaml", "path to config file")
+	rootCmd.AddCommand(configCmd)
+
 	// hide completion command
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
