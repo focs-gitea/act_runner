@@ -5,9 +5,12 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"gitea.com/gitea/act_runner/config"
 )
 
 // the version of act_runner
@@ -53,14 +56,14 @@ func Execute(ctx context.Context) {
 	rootCmd.AddCommand(loadExecCmd(ctx))
 
 	// ./act_runner config
-	configCmd := &cobra.Command{
+	rootCmd.AddCommand(&cobra.Command{
 		Use:   "config",
 		Short: "Generate an example config file",
 		Args:  cobra.MaximumNArgs(0),
-		RunE:  runConfig,
-	}
-	configCmd.Flags().String("path", "config.yaml", "path to config file")
-	rootCmd.AddCommand(configCmd)
+		Run: func(_ *cobra.Command, _ []string) {
+			fmt.Printf("%s", config.Example)
+		},
+	})
 
 	// hide completion command
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
