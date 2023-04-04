@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
-	"gitea.com/gitea/act_runner/internal/pkg/artifactcache"
 	"gitea.com/gitea/act_runner/internal/pkg/client"
 	"gitea.com/gitea/act_runner/internal/pkg/config"
 	"gitea.com/gitea/act_runner/internal/pkg/envcheck"
@@ -70,25 +69,7 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			version,
 		)
 
-		runner := &runtime.Runner{
-			Client:        cli,
-			Machine:       reg.Name,
-			ForgeInstance: reg.Address,
-			Environ:       cfg.Runner.Envs,
-			Labels:        ls,
-			Network:       cfg.Container.Network,
-			Version:       version,
-		}
-
-		if *cfg.Cache.Enabled {
-			if handler, err := artifactcache.NewHandler(cfg.Cache.Dir, cfg.Cache.Host, cfg.Cache.Port); err != nil {
-				log.Errorf("cannot init cache server, it will be disabled: %v", err)
-			} else {
-				log.Infof("cache handler listens on: %v", handler.ExternalURL())
-				runner.CacheHandler = handler
-			}
-		}
-
+		runner := runtime.NewRunner(cfg, reg, version)
 		poller := poller.New(
 			cli,
 			runner.Run,

@@ -179,6 +179,7 @@ func (r *Reporter) Close(lastWords string) error {
 				v.Result = runnerv1.Result_RESULT_CANCELLED
 			}
 		}
+		r.state.Result = runnerv1.Result_RESULT_FAILURE
 		r.logRows = append(r.logRows, &runnerv1.LogRow{
 			Time:    timestamppb.Now(),
 			Content: lastWords,
