@@ -223,6 +223,7 @@ func (t *Task) Run(ctx context.Context, task *runnerv1.Task, runnerName, runnerV
 		JSONLogger:            input.jsonLogger,
 		Env:                   input.envs,
 		Secrets:               task.Secrets,
+		Token:                 token,
 		InsecureSecrets:       input.insecureSecrets,
 		Privileged:            input.privileged,
 		UsernsMode:            input.usernsMode,
