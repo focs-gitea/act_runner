@@ -22,7 +22,7 @@ import (
 
 	"gitea.com/gitea/act_runner/client"
 	"gitea.com/gitea/act_runner/config"
-	"gitea.com/gitea/act_runner/runtime"
+	"gitea.com/gitea/act_runner/internal/pkg/labels"
 )
 
 // runRegister registers a runner to the server
@@ -116,9 +116,9 @@ func (r *registerInputs) validate() error {
 	return nil
 }
 
-func validateLabels(labels []string) error {
-	for _, label := range labels {
-		if _, _, _, err := runtime.ParseLabel(label); err != nil {
+func validateLabels(ls []string) error {
+	for _, label := range ls {
+		if _, err := labels.Parse(label); err != nil {
 			return err
 		}
 	}
@@ -305,16 +305,16 @@ func doRegister(cfg *config.Config, inputs *registerInputs) error {
 		Labels:  inputs.CustomLabels,
 	}
 
-	labels := make([]string, len(reg.Labels))
+	ls := make([]string, len(reg.Labels))
 	for i, v := range reg.Labels {
-		l, _, _, _ := runtime.ParseLabel(v)
-		labels[i] = l
+		l, _ := labels.Parse(v)
+		ls[i] = l.Name
 	}
 	// register new runner.
 	resp, err := cli.Register(ctx, connect.NewRequest(&runnerv1.RegisterRequest{
 		Name:        reg.Name,
 		Token:       reg.Token,
-		AgentLabels: labels,
+		AgentLabels: ls,
 	}))
 	if err != nil {
 		log.WithError(err).Error("poller: cannot register new runner")

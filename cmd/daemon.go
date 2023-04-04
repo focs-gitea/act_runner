@@ -17,6 +17,7 @@ import (
 	"gitea.com/gitea/act_runner/client"
 	"gitea.com/gitea/act_runner/config"
 	"gitea.com/gitea/act_runner/engine"
+	"gitea.com/gitea/act_runner/internal/pkg/labels"
 	"gitea.com/gitea/act_runner/poller"
 	"gitea.com/gitea/act_runner/runtime"
 )
@@ -40,17 +41,20 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			return fmt.Errorf("failed to load registration file: %w", err)
 		}
 
-		// require docker if a runner label uses a docker backend
-		needsDocker := false
+		ls := labels.Labels{}
 		for _, l := range reg.Labels {
-			_, schema, _, _ := runtime.ParseLabel(l)
-			if schema == "docker" {
-				needsDocker = true
-				break
+			label, err := labels.Parse(l)
+			if err != nil {
+				log.WithError(err).Warnf("ignored invalid label %q", l)
+				continue
 			}
+			ls = append(ls, label)
+		}
+		if len(ls) == 0 {
+			log.Warn("no labels configured, runner may not be able to pick up jobs")
 		}
 
-		if needsDocker {
+		if ls.RequireDocker() {
 			// try to connect to docker daemon
 			// if failed, exit with error
 			if err := engine.Start(ctx); err != nil {
@@ -73,7 +77,7 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			Machine:       reg.Name,
 			ForgeInstance: reg.Address,
 			Environ:       cfg.Runner.Envs,
-			Labels:        reg.Labels,
+			Labels:        ls,
 			Network:       cfg.Container.Network,
 			Version:       version,
 		}
