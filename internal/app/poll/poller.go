@@ -60,7 +60,6 @@ func (p *Poller) poll(ctx context.Context, wg *sync.WaitGroup, limiter *rate.Lim
 			log.WithError(err).Error("failed to run task")
 		}
 	}
-
 }
 
 func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
