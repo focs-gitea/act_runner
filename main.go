@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"gitea.com/gitea/act_runner/cmd"
+	"gitea.com/gitea/act_runner/internal/app/cmd"
 )
 
 func withContextFunc(ctx context.Context, f func()) context.Context {

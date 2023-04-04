@@ -18,7 +18,7 @@ import (
 	"github.com/nektos/act/pkg/runner"
 	log "github.com/sirupsen/logrus"
 
-	"gitea.com/gitea/act_runner/internal/pkg/artifactcache"
+	"gitea.com/gitea/act_runner/internal/app/artifactcache"
 	"gitea.com/gitea/act_runner/internal/pkg/client"
 	"gitea.com/gitea/act_runner/internal/pkg/config"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
