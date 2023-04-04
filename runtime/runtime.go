@@ -155,12 +155,12 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		maxLifetime = time.Until(deadline)
 	}
 
-	config := &runner.Config{
+	runnerConfig := &runner.Config{
 		// On Linux, Workdir will be like "/<owner>/<repo>"
 		// On Windows, Workdir will be like "\<owner>\<repo>"
-		Workdir: filepath.FromSlash(string(filepath.Separator) + preset.Repository),
+		Workdir:     filepath.FromSlash(string(filepath.Separator) + preset.Repository),
+		BindWorkdir: false,
 
-		BindWorkdir:           false,
 		ReuseContainers:       false,
 		ForcePull:             false,
 		ForceRebuild:          false,
@@ -168,18 +168,8 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		JSONLogger:            false,
 		Env:                   r.envs,
 		Secrets:               task.Secrets,
-		InsecureSecrets:       false,
-		Privileged:            false,
-		UsernsMode:            "",
-		ContainerArchitecture: "",
-		ContainerDaemonSocket: "",
-		UseGitIgnore:          false,
 		GitHubInstance:        r.client.Address(),
-		ContainerCapAdd:       nil,
-		ContainerCapDrop:      nil,
 		AutoRemove:            true,
-		ArtifactServerPath:    "",
-		ArtifactServerPort:    "",
 		NoSkipCheckout:        true,
 		PresetGitHubContext:   preset,
 		EventJSON:             string(eventJSON),
@@ -190,7 +180,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		PlatformPicker:        r.labels.PickPlatform,
 	}
 
-	rr, err := runner.New(config)
+	rr, err := runner.New(runnerConfig)
 	if err != nil {
 		return err
 	}
