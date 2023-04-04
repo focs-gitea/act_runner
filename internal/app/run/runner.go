@@ -39,8 +39,7 @@ type Runner struct {
 	runningTasks sync.Map
 }
 
-func NewRunner(cfg *config.Config, reg *config.Registration, version string) *Runner {
-	cli := client.New(reg.Address, cfg.Runner.Insecure, reg.UUID, reg.Token, version)
+func NewRunner(cfg *config.Config, reg *config.Registration, cli client.Client, version string) *Runner {
 	ls := labels.Labels{}
 	for _, v := range reg.Labels {
 		if l, err := labels.Parse(v); err == nil {
@@ -79,7 +78,7 @@ func (r *Runner) Run(ctx context.Context, task *runnerv1.Task) error {
 		defer r.runningTasks.Delete(task.Id)
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithTimeout(ctx, r.cfg.Runner.Timeout)
 	defer cancel()
 	reporter := report.NewReporter(ctx, cancel, r.client, task)
 	var runErr error

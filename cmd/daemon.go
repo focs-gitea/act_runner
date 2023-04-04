@@ -11,14 +11,13 @@ import (
 	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 
+	"gitea.com/gitea/act_runner/internal/app/poll"
 	"gitea.com/gitea/act_runner/internal/app/run"
 	"gitea.com/gitea/act_runner/internal/pkg/client"
 	"gitea.com/gitea/act_runner/internal/pkg/config"
 	"gitea.com/gitea/act_runner/internal/pkg/envcheck"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
-	"gitea.com/gitea/act_runner/poller"
 )
 
 func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command, args []string) error {
@@ -59,8 +58,6 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			}
 		}
 
-		var g errgroup.Group
-
 		cli := client.New(
 			reg.Address,
 			cfg.Runner.Insecure,
@@ -69,31 +66,12 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			version,
 		)
 
-		runner := run.NewRunner(cfg, reg, version)
-		poller := poller.New(
-			cli,
-			runner.Run,
-			cfg,
-		)
+		runner := run.NewRunner(cfg, reg, cli, version)
+		poller := poll.New(cfg, cli, runner)
 
-		g.Go(func() error {
-			l := log.WithField("capacity", cfg.Runner.Capacity).
-				WithField("endpoint", reg.Address)
-			l.Infoln("polling the remote server")
+		poller.Poll(ctx)
 
-			if err := poller.Poll(ctx); err != nil {
-				l.Errorf("poller error: %v", err)
-			}
-			poller.Wait()
-			return nil
-		})
-
-		err = g.Wait()
-		if err != nil {
-			log.WithError(err).
-				Errorln("shutting down the server")
-		}
-		return err
+		return nil
 	}
 }
 
