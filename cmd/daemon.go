@@ -13,12 +13,12 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
+	"gitea.com/gitea/act_runner/internal/app/run"
 	"gitea.com/gitea/act_runner/internal/pkg/client"
 	"gitea.com/gitea/act_runner/internal/pkg/config"
 	"gitea.com/gitea/act_runner/internal/pkg/envcheck"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
 	"gitea.com/gitea/act_runner/poller"
-	"gitea.com/gitea/act_runner/runtime"
 )
 
 func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command, args []string) error {
@@ -69,7 +69,7 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			version,
 		)
 
-		runner := runtime.NewRunner(cfg, reg, version)
+		runner := run.NewRunner(cfg, reg, version)
 		poller := poller.New(
 			cli,
 			runner.Run,
