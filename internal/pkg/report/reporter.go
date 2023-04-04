@@ -17,7 +17,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"gitea.com/gitea/act_runner/client"
+	"gitea.com/gitea/act_runner/internal/pkg/client"
 )
 
 type Reporter struct {
