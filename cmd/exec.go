@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
-	"gitea.com/gitea/act_runner/artifactcache"
+	"gitea.com/gitea/act_runner/internal/pkg/artifactcache"
 )
 
 type executeArgs struct {

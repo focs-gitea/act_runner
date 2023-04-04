@@ -8,7 +8,7 @@ import (
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
 
-	"gitea.com/gitea/act_runner/artifactcache"
+	"gitea.com/gitea/act_runner/internal/pkg/artifactcache"
 	"gitea.com/gitea/act_runner/internal/pkg/client"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
 )
