@@ -20,6 +20,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"gitea.com/gitea/act_runner/client"
+	"gitea.com/gitea/act_runner/internal/pkg/report"
 )
 
 var globalTaskMap sync.Map
@@ -128,7 +129,7 @@ func (t *Task) Run(ctx context.Context, task *runnerv1.Task, runnerName, runnerV
 	defer globalTaskMap.Delete(task.Id)
 
 	lastWords := ""
-	reporter := NewReporter(ctx, cancel, t.client, task)
+	reporter := report.NewReporter(ctx, cancel, t.client, task)
 	defer func() {
 		// set the job to failed on an error return value
 		if lastErr != nil {
