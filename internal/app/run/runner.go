@@ -23,12 +23,12 @@ import (
 	"gitea.com/gitea/act_runner/internal/pkg/config"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
 	"gitea.com/gitea/act_runner/internal/pkg/report"
+	"gitea.com/gitea/act_runner/internal/pkg/ver"
 )
 
 // Runner runs the pipeline.
 type Runner struct {
-	name    string
-	version string
+	name string
 
 	cfg *config.Config
 
@@ -39,7 +39,7 @@ type Runner struct {
 	runningTasks sync.Map
 }
 
-func NewRunner(cfg *config.Config, reg *config.Registration, cli client.Client, version string) *Runner {
+func NewRunner(cfg *config.Config, reg *config.Registration, cli client.Client) *Runner {
 	ls := labels.Labels{}
 	for _, v := range reg.Labels {
 		if l, err := labels.Parse(v); err == nil {
@@ -61,12 +61,11 @@ func NewRunner(cfg *config.Config, reg *config.Registration, cli client.Client, 
 	}
 
 	return &Runner{
-		name:    reg.Name,
-		version: version,
-		cfg:     cfg,
-		client:  cli,
-		labels:  ls,
-		envs:    envs,
+		name:   reg.Name,
+		cfg:    cfg,
+		client: cli,
+		labels: ls,
+		envs:   envs,
 	}
 }
 
@@ -96,7 +95,7 @@ func (r *Runner) Run(ctx context.Context, task *runnerv1.Task) error {
 }
 
 func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.Reporter) error {
-	reporter.Logf("%s(version:%s) received task %v of job %v, be triggered by event: %s", r.name, r.version, task.Id, task.Context.Fields["job"].GetStringValue(), task.Context.Fields["event_name"].GetStringValue())
+	reporter.Logf("%s(version:%s) received task %v of job %v, be triggered by event: %s", r.name, ver.Version(), task.Id, task.Context.Fields["job"].GetStringValue(), task.Context.Fields["event_name"].GetStringValue())
 
 	workflow, err := model.ReadWorkflow(bytes.NewReader(task.WorkflowPayload))
 	if err != nil {

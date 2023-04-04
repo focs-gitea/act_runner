@@ -23,6 +23,7 @@ import (
 	"gitea.com/gitea/act_runner/internal/pkg/client"
 	"gitea.com/gitea/act_runner/internal/pkg/config"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
+	"gitea.com/gitea/act_runner/internal/pkg/ver"
 )
 
 // runRegister registers a runner to the server
@@ -37,7 +38,7 @@ func runRegister(ctx context.Context, regArgs *registerArgs, configFile *string)
 		log.SetLevel(log.DebugLevel)
 
 		log.Infof("Registering runner, arch=%s, os=%s, version=%s.",
-			goruntime.GOARCH, goruntime.GOOS, version)
+			goruntime.GOARCH, goruntime.GOOS, ver.Version())
 
 		// runner always needs root permission
 		if os.Getuid() != 0 {
@@ -272,7 +273,7 @@ func doRegister(cfg *config.Config, inputs *registerInputs) error {
 		cfg.Runner.Insecure,
 		"",
 		"",
-		version,
+		ver.Version(),
 	)
 
 	for {
