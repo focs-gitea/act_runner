@@ -15,8 +15,8 @@ import (
 
 	"gitea.com/gitea/act_runner/artifactcache"
 	"gitea.com/gitea/act_runner/client"
-	"gitea.com/gitea/act_runner/engine"
 	"gitea.com/gitea/act_runner/internal/pkg/config"
+	"gitea.com/gitea/act_runner/internal/pkg/envcheck"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
 	"gitea.com/gitea/act_runner/poller"
 	"gitea.com/gitea/act_runner/runtime"
@@ -55,10 +55,8 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 		}
 
 		if ls.RequireDocker() {
-			// try to connect to docker daemon
-			// if failed, exit with error
-			if err := engine.Start(ctx); err != nil {
-				log.WithError(err).Fatalln("failed to connect docker daemon engine")
+			if err := envcheck.CheckIfDockerRunning(ctx); err != nil {
+				return err
 			}
 		}
 
