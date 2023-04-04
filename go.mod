@@ -16,7 +16,6 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
-	golang.org/x/sync v0.1.0
 	golang.org/x/term v0.6.0
 	golang.org/x/time v0.1.0
 	google.golang.org/protobuf v1.28.1
@@ -92,6 +91,7 @@ require (
 	golang.org/x/crypto v0.2.0 // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/tools v0.1.5 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
