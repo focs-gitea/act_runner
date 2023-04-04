@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"gitea.com/gitea/act_runner/client"
-	"gitea.com/gitea/act_runner/config"
+	"gitea.com/gitea/act_runner/internal/pkg/config"
 )
 
 var ErrDataLock = errors.New("Data Lock Error")

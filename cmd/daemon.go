@@ -15,8 +15,8 @@ import (
 
 	"gitea.com/gitea/act_runner/artifactcache"
 	"gitea.com/gitea/act_runner/client"
-	"gitea.com/gitea/act_runner/config"
 	"gitea.com/gitea/act_runner/engine"
+	"gitea.com/gitea/act_runner/internal/pkg/config"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
 	"gitea.com/gitea/act_runner/poller"
 	"gitea.com/gitea/act_runner/runtime"
