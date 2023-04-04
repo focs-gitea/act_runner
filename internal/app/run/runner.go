@@ -94,7 +94,13 @@ func (r *Runner) Run(ctx context.Context, task *runnerv1.Task) error {
 	return nil
 }
 
-func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.Reporter) error {
+func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.Reporter) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %v", r)
+		}
+	}()
+
 	reporter.Logf("%s(version:%s) received task %v of job %v, be triggered by event: %s", r.name, ver.Version(), task.Id, task.Context.Fields["job"].GetStringValue(), task.Context.Fields["event_name"].GetStringValue())
 
 	workflow, err := model.ReadWorkflow(bytes.NewReader(task.WorkflowPayload))
