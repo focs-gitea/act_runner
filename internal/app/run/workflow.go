@@ -20,6 +20,24 @@ func generateWorkflow(task *runnerv1.Task) (*model.Workflow, string, error) {
 		return nil, "", err
 	}
 
+	// debug
+	if workflow.Name == "test_needs_outputs" {
+		task.Needs = map[string]*runnerv1.TaskNeed{
+			"job1": {
+				Outputs: map[string]string{
+					"output1": "output1 value",
+				},
+				Result: runnerv1.Result_RESULT_SUCCESS,
+			},
+			"job2": {
+				Outputs: map[string]string{
+					"output2": "output2 value",
+				},
+				Result: runnerv1.Result_RESULT_SUCCESS,
+			},
+		}
+	}
+
 	jobIDs := workflow.GetJobIDs()
 	if len(jobIDs) != 1 {
 		return nil, "", fmt.Errorf("multiple jobs found: %v", jobIDs)
