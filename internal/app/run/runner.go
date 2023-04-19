@@ -203,5 +203,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 	// add logger recorders
 	ctx = common.WithLoggerHook(ctx, reporter)
 
-	return executor(ctx)
+	execErr := executor(ctx)
+	reporter.SetOutputs(job.Outputs)
+	return execErr
 }
