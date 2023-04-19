@@ -4,7 +4,6 @@ on:
   - pull_request
 
 env:
-  GOPROXY: https://goproxy.io,direct
   GOPATH: /go_path
   GOCACHE: /go_cache
 

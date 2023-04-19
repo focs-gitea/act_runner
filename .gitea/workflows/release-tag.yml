@@ -5,6 +5,10 @@ on:
     tags:
       - '*'
 
+env:
+  GOPATH: /go_path
+  GOCACHE: /go_cache
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
