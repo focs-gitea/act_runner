@@ -173,6 +173,10 @@ func (r *Reporter) SetOutputs(outputs map[string]string) {
 	defer r.stateMu.Unlock()
 
 	for k, v := range outputs {
+		if len(k) > 255 {
+			r.Logf("ignore output because the key is too long: %q", k)
+			continue
+		}
 		if _, ok := r.outputs.Load(k); ok {
 			continue
 		}
@@ -280,6 +284,17 @@ func (r *Reporter) ReportState() error {
 
 	if resp.Msg.State != nil && resp.Msg.State.Result == runnerv1.Result_RESULT_CANCELLED {
 		r.cancel()
+	}
+
+	var noSent []string
+	r.outputs.Range(func(k, v interface{}) bool {
+		if _, ok := v.(string); ok {
+			noSent = append(noSent, k.(string))
+		}
+		return true
+	})
+	if len(noSent) >= 0 {
+		return fmt.Errorf("there are still outputs that have not been sent: %v", noSent)
 	}
 
 	return nil
