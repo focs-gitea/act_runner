@@ -160,6 +160,10 @@ func (r *Reporter) Logf(format string, a ...interface{}) {
 	r.stateMu.Lock()
 	defer r.stateMu.Unlock()
 
+	r.logf(format, a...)
+}
+
+func (r *Reporter) logf(format string, a ...interface{}) {
 	if !r.duringSteps() {
 		r.logRows = append(r.logRows, &runnerv1.LogRow{
 			Time:    timestamppb.Now(),
@@ -174,7 +178,7 @@ func (r *Reporter) SetOutputs(outputs map[string]string) {
 
 	for k, v := range outputs {
 		if len(k) > 255 {
-			r.Logf("ignore output because the key is too long: %q", k)
+			r.logf("ignore output because the key is too long: %q", k)
 			continue
 		}
 		if _, ok := r.outputs.Load(k); ok {
@@ -293,7 +297,7 @@ func (r *Reporter) ReportState() error {
 		}
 		return true
 	})
-	if len(noSent) >= 0 {
+	if len(noSent) > 0 {
 		return fmt.Errorf("there are still outputs that have not been sent: %v", noSent)
 	}
 
