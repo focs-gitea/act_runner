@@ -181,6 +181,10 @@ func (r *Reporter) SetOutputs(outputs map[string]string) {
 			r.logf("ignore output because the key is too long: %q", k)
 			continue
 		}
+		if l := len(v); l > 1024*1024 {
+			log.Println("ignore output because the value is too long:", k, l)
+			r.logf("ignore output because the value %q is too long: %d", k, l)
+		}
 		if _, ok := r.outputs.Load(k); ok {
 			continue
 		}
