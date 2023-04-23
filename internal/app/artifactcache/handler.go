@@ -19,7 +19,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	log "github.com/sirupsen/logrus"
-	_ "modernc.org/sqlite"
 	"xorm.io/builder"
 	"xorm.io/xorm"
 )
