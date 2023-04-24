@@ -55,7 +55,7 @@ func StartHandler(dir, outboundIP string, port uint16) (*Handler, error) {
 		return nil, err
 	}
 
-	e, err := xorm.NewEngine("sqlite", filepath.Join(dir, "sqlite.db"))
+	e, err := xorm.NewEngine(sqliteDriverName, filepath.Join(dir, "sqlite.db"))
 	if err != nil {
 		return nil, err
 	}

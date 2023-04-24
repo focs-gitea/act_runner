@@ -7,3 +7,5 @@
 package artifactcache
 
 import _ "github.com/mattn/go-sqlite3"
+
+var sqliteDriverName = "sqlite3"

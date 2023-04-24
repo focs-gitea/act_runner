@@ -7,3 +7,5 @@
 package artifactcache
 
 import _ "modernc.org/sqlite"
+
+var sqliteDriverName = "sqlite3"
