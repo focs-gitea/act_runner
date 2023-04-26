@@ -18,66 +18,82 @@ func TestReporter_parseLogRow(t *testing.T) {
 		args               []string
 		want               []string
 	}{
-		{"No command", false,
+		{
+			"No command", false,
 			[]string{"Hello, world!"},
 			[]string{"Hello, world!"},
 		},
-		{"Add-mask", false,
+		{
+			"Add-mask", false,
 			[]string{
 				"foo mysecret bar",
 				"::add-mask::mysecret",
 				"foo mysecret bar",
-			}, []string{
+			},
+			[]string{
 				"foo mysecret bar",
 				"<nil>",
 				"foo *** bar",
 			},
 		},
-		{"Debug enabled", true,
+		{
+			"Debug enabled", true,
 			[]string{
 				"::debug::GitHub Actions runtime token access controls",
-			}, []string{
+			},
+			[]string{
 				"GitHub Actions runtime token access controls",
 			},
 		},
-		{"Debug not enabled", false,
+		{
+			"Debug not enabled", false,
 			[]string{
 				"::debug::GitHub Actions runtime token access controls",
-			}, []string{
+			},
+			[]string{
 				"<nil>",
 			},
 		},
-		{"notice", false,
+		{
+			"notice", false,
 			[]string{
 				"::notice file=file.name,line=42,endLine=48,title=Cool Title::Gosh, that's not going to work",
-			}, []string{
+			},
+			[]string{
 				"::notice file=file.name,line=42,endLine=48,title=Cool Title::Gosh, that's not going to work",
 			},
 		},
-		{"warning", false,
+		{
+			"warning", false,
 			[]string{
 				"::warning file=file.name,line=42,endLine=48,title=Cool Title::Gosh, that's not going to work",
-			}, []string{
+			},
+			[]string{
 				"::warning file=file.name,line=42,endLine=48,title=Cool Title::Gosh, that's not going to work",
 			},
 		},
-		{"error", false,
+		{
+			"error", false,
 			[]string{
 				"::error file=file.name,line=42,endLine=48,title=Cool Title::Gosh, that's not going to work",
-			}, []string{
+			},
+			[]string{
 				"::error file=file.name,line=42,endLine=48,title=Cool Title::Gosh, that's not going to work",
 			},
 		},
-		{"group", false,
+		{
+			"group", false,
 			[]string{
 				"::group::",
 				"::endgroup::",
-			}, []string{
+			},
+			[]string{
 				"::group::",
 				"::endgroup::",
 			},
 		},
-		{"stop-commands", false,
+		{
+			"stop-commands", false,
 			[]string{
 				"::add-mask::foo",
 				"::stop-commands::myverycoolstoptoken",
@@ -88,7 +104,8 @@ func TestReporter_parseLogRow(t *testing.T) {
 				"::myverycoolstoptoken::",
 				"::add-mask::wibble",
 				"foo bar baz wibble",
-			}, []string{
+			},
+			[]string{
 				"<nil>",
 				"<nil>",
 				"::add-mask::bar",
@@ -100,10 +117,12 @@ func TestReporter_parseLogRow(t *testing.T) {
 				"*** bar baz ***",
 			},
 		},
-		{"unknown command", false,
+		{
+			"unknown command", false,
 			[]string{
 				"::set-mask::foo",
-			}, []string{
+			},
+			[]string{
 				"::set-mask::foo",
 			},
 		},
