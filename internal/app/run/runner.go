@@ -166,8 +166,8 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 	}
 
 	runnerConfig := &runner.Config{
-		// On Linux, Workdir will be like "/<owner>/<repo>"
-		// On Windows, Workdir will be like "\<owner>\<repo>"
+		// On Linux, Workdir will be like "/<parent_directory>/<owner>/<repo>"
+		// On Windows, Workdir will be like "\<parent_directory>\<owner>\<repo>"
 		Workdir:     filepath.FromSlash(fmt.Sprintf("/%s/%s", r.cfg.Container.WorkdirParent, preset.Repository)),
 		BindWorkdir: false,
 
