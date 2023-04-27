@@ -48,5 +48,5 @@ jobs:
             linux/arm64            
           push: true
           tags: |
-            ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:latest
+            ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:nightly
             ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}            
