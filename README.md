@@ -96,3 +96,24 @@ docker run -e GITEA_INSTANCE_URL=http://192.168.8.18:3000 -e GITEA_RUNNER_REGIST
 
 The `/data` directory inside the docker container contains the runner API keys after registration.
 It must be persisted, otherwise the runner would try to register again, using the same, now defunct registration token.
+
+### Running in docker-compose
+
+```yml
+...
+  gitea:
+    image: gitea/gitea
+    ...
+
+  runner:
+    image: gitea/act_runner
+    restart: always
+    depends_on:
+      - gitea
+    volumes:
+      - ./data/act_runner:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - GITEA_INSTANCE_URL=<instance url>
+      - GITEA_RUNNER_REGISTRATION_TOKEN=<registration token>
+```
