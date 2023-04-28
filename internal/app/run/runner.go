@@ -166,9 +166,9 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 	}
 
 	runnerConfig := &runner.Config{
-		// On Linux, Workdir will be like "/<owner>/<repo>"
-		// On Windows, Workdir will be like "\<owner>\<repo>"
-		Workdir:     filepath.FromSlash(string(filepath.Separator) + preset.Repository),
+		// On Linux, Workdir will be like "/<parent_directory>/<owner>/<repo>"
+		// On Windows, Workdir will be like "\<parent_directory>\<owner>\<repo>"
+		Workdir:     filepath.FromSlash(fmt.Sprintf("/%s/%s", r.cfg.Container.WorkdirParent, preset.Repository)),
 		BindWorkdir: false,
 
 		ReuseContainers:       false,
@@ -190,6 +190,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		Privileged:            r.cfg.Container.Privileged,
 		DefaultActionInstance: taskContext["gitea_default_actions_url"].GetStringValue(),
 		PlatformPicker:        r.labels.PickPlatform,
+		Vars:                  task.Vars,
 	}
 
 	rr, err := runner.New(runnerConfig)
