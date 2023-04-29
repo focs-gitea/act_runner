@@ -69,7 +69,8 @@ jobs:
         with:
           fetch-depth: 0 # all history for all branches and tags
 
-      - uses: github.com/hadolint/hadolint-action@v3.1.0
+      - name: dockerfile lint check
+        uses: https://github.com/hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
 
