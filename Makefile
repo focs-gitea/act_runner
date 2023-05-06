@@ -108,7 +108,7 @@ test: fmt-check
 vet:
 	@echo "Running go vet..."
 	@$(GO) build code.gitea.io/gitea-vet
-	@$(GO) vet -vettool=gitea-vet %(GO_PACKAGES_TO_VET)
+	@$(GO) vet -vettool=gitea-vet $(GO_PACKAGES_TO_VET)
 
 install: $(GOFILES)
 	$(GO) install -v -tags '$(TAGS)' -ldflags '$(EXTLDFLAGS)-s -w $(LDFLAGS)'
