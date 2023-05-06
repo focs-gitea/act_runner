@@ -144,8 +144,8 @@ func (r *Reporter) Fire(entry *log.Entry) error {
 				if step.LogLength == 0 {
 					step.LogIndex = int64(r.logOffset + len(r.logRows))
 				}
-				r.logRows = append(r.logRows, row)
 				step.LogLength++
+				r.logRows = append(r.logRows, row)
 			}
 		}
 	} else if !r.duringSteps() {
