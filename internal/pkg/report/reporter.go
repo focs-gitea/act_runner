@@ -139,8 +139,7 @@ func (r *Reporter) Fire(entry *log.Entry) error {
 	}
 	if v, ok := entry.Data["raw_output"]; ok {
 		if rawOutput, ok := v.(bool); ok && rawOutput {
-			row := r.parseLogRow(entry)
-			if row != nil {
+			if row := r.parseLogRow(entry); row != nil {
 				if step.LogLength == 0 {
 					step.LogIndex = int64(r.logOffset + len(r.logRows))
 				}
