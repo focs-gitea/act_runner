@@ -1,4 +1,5 @@
 FROM golang:1.20-alpine3.17 as builder
+# Do not remove `git` here, it is required for getting runner version when executing `make build`
 RUN apk add --no-cache make=4.3-r1 git=2.38.5-r0
 
 COPY . /opt/src/act_runner
