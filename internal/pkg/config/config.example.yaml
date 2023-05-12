@@ -32,17 +32,17 @@ cache:
   enabled: true
   # The directory to store the cache data.
   # If it's empty, the cache data will be stored in $HOME/.cache/actcache.
-  dir: ""
+  dir: ''
   # The host of the cache server.
   # It's not for the address to listen, but the address to connect from job containers.
   # So 0.0.0.0 is a bad choice, leave it empty to detect automatically.
-  host: ""
+  host: ''
   # The port of the cache server.
   # 0 means to use a random available port.
   port: 0
 
 container:
-  # Which network to use for the job containers. Could be bridge, host, or the name of a custom network.
+  # Which network to use for the job containers. Could be bridge, host or the name of a custom network.
   # More info: https://gitea.com/gitea/act/pulls/56
   network_mode: bridge
   # Whether to use privileged mode or not when launching task containers (privileged mode is required for Docker-in-Docker).
