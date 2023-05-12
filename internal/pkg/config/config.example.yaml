@@ -42,7 +42,8 @@ cache:
   port: 0
 
 container:
-  # Which network to use for the job containers. Could be bridge, host, none, or the name of a custom network.
+  # Which network to use for the job containers. Could be bridge, host, or the name of a custom network.
+  # More info: https://gitea.com/gitea/act/pulls/56
   network_mode: bridge
   # Whether to use privileged mode or not when launching task containers (privileged mode is required for Docker-in-Docker).
   privileged: false

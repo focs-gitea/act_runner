@@ -13,6 +13,7 @@ import (
 	"time"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
+	docker_container "github.com/docker/docker/api/types/container"
 	"github.com/nektos/act/pkg/artifactcache"
 	"github.com/nektos/act/pkg/common"
 	"github.com/nektos/act/pkg/model"
@@ -170,6 +171,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		maxLifetime = time.Until(deadline)
 	}
 
+	networkMode := docker_container.NetworkMode(r.cfg.Container.NetworkMode)
 	runnerConfig := &runner.Config{
 		// On Linux, Workdir will be like "/<parent_directory>/<owner>/<repo>"
 		// On Windows, Workdir will be like "\<parent_directory>\<owner>\<repo>"
@@ -190,7 +192,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		EventJSON:             string(eventJSON),
 		ContainerNamePrefix:   fmt.Sprintf("GITEA-ACTIONS-TASK-%d", task.Id),
 		ContainerMaxLifetime:  maxLifetime,
-		ContainerNetworkMode:  r.cfg.Container.NetworkMode,
+		ContainerNetworkMode:  &networkMode,
 		ContainerOptions:      r.cfg.Container.Options,
 		Privileged:            r.cfg.Container.Privileged,
 		DefaultActionInstance: taskContext["gitea_default_actions_url"].GetStringValue(),
