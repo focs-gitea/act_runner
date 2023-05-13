@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	docker_container "github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/container"
 	"github.com/joho/godotenv"
 	"github.com/nektos/act/pkg/artifactcache"
 	"github.com/nektos/act/pkg/artifacts"
@@ -356,7 +356,6 @@ func runExec(ctx context.Context, execArgs *executeArgs) func(cmd *cobra.Command
 		log.Infof("cache handler listens on: %v", handler.ExternalURL())
 		execArgs.cacheHandler = handler
 
-		networkMode := docker_container.NetworkMode("bridge")
 		// run the plan
 		config := &runner.Config{
 			Workdir:               execArgs.Workdir(),
@@ -386,7 +385,7 @@ func runExec(ctx context.Context, execArgs *executeArgs) func(cmd *cobra.Command
 			// EventJSON:             string(eventJSON),
 			ContainerNamePrefix:   fmt.Sprintf("GITEA-ACTIONS-TASK-%s", eventName),
 			ContainerMaxLifetime:  maxLifetime,
-			ContainerNetworkMode:  &networkMode,
+			ContainerNetworkMode:  container.NetworkMode("bridge"),
 			DefaultActionInstance: execArgs.defaultActionsUrl,
 			PlatformPicker: func(_ []string) string {
 				return execArgs.image

@@ -34,7 +34,8 @@ type Config struct {
 		Port    uint16 `yaml:"port"`
 	} `yaml:"cache"`
 	Container struct {
-		NetworkMode   string `yaml:"network_mode"`
+		// NetworkMode   string `yaml:"network_mode"` // Legacy
+		Network       string `yaml:"network"`
 		Privileged    bool   `yaml:"privileged"`
 		Options       string `yaml:"options"`
 		WorkdirParent string `yaml:"workdir_parent"`
@@ -91,9 +92,6 @@ func LoadDefault(file string) (*Config, error) {
 			home, _ := os.UserHomeDir()
 			cfg.Cache.Dir = filepath.Join(home, ".cache", "actcache")
 		}
-	}
-	if cfg.Container.NetworkMode == "" {
-		cfg.Container.NetworkMode = "bridge"
 	}
 	if cfg.Container.WorkdirParent == "" {
 		cfg.Container.WorkdirParent = "workspace"
