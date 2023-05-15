@@ -34,8 +34,8 @@ type Config struct {
 		Port    uint16 `yaml:"port"`
 	} `yaml:"cache"`
 	Container struct {
-		// NetworkMode   string `yaml:"network_mode"` // Legacy
 		Network       string `yaml:"network"`
+		NetworkMode   string `yaml:"network_mode"` // leagcy, but will be abandoned in future, be replace by network.
 		Privileged    bool   `yaml:"privileged"`
 		Options       string `yaml:"options"`
 		WorkdirParent string `yaml:"workdir_parent"`
@@ -101,6 +101,14 @@ func LoadDefault(file string) (*Config, error) {
 	}
 	if cfg.Runner.FetchInterval <= 0 {
 		cfg.Runner.FetchInterval = 2 * time.Second
+	}
+
+	// although `container.network_mode` will be abandoned,
+	// but we have to be compatible with it for now.
+	// rule: if the value of `container.network` is blank and the value of `container.network_mode` is not blank,
+	// then the value of `container.network` will be set to the value of `container.network_mode`.
+	if cfg.Container.Network == "" && cfg.Container.NetworkMode != "" {
+		cfg.Container.Network = cfg.Container.NetworkMode
 	}
 
 	return cfg, nil
