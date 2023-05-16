@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,7 +36,7 @@ type Config struct {
 	} `yaml:"cache"`
 	Container struct {
 		Network       string `yaml:"network"`
-		NetworkMode   string `yaml:"network_mode"` // leagcy, but will be abandoned in future, be replace by network.
+		NetworkMode   string `yaml:"network_mode"` // Deprecated: use Network instead. Could be removed after Gitea 1.20
 		Privileged    bool   `yaml:"privileged"`
 		Options       string `yaml:"options"`
 		WorkdirParent string `yaml:"workdir_parent"`
@@ -103,12 +104,24 @@ func LoadDefault(file string) (*Config, error) {
 		cfg.Runner.FetchInterval = 2 * time.Second
 	}
 
-	// although `container.network_mode` will be abandoned,
+	// although `container.network_mode` will be deprecated,
 	// but we have to be compatible with it for now.
-	// rule: if the value of `container.network` is blank and the value of `container.network_mode` is not blank,
-	// then the value of `container.network` will be set to the value of `container.network_mode`.
+	// Compatible logic:
+	// 1. The following logic (point 2 and 3) will only be executed if the value of `container.network_mode` is not empty string and the value of `container.network` is empty string.
+	//    If you want to specify `container.network` to empty string to make `act_runner` create a new network for each job,
+	//    please make sure that `container.network_mode` is not exist in you configuration file.
+	// 2. If the value of `container.network_mode` is `bridge`, then the value of `container.network` will be set to empty string.
+	//		`act_runner` will create a new network for each job
+	// 3. Otherwise, the value of `container.network` will be set to the value of `container.network_mode`.
 	if cfg.Container.NetworkMode != "" && cfg.Container.Network == "" {
-		cfg.Container.Network = cfg.Container.NetworkMode
+		log.Warnf("You are trying to use deprecated configuration item of `container.network_mode`: %s, it will be removed after Gitea 1.20 released", cfg.Container.NetworkMode)
+		log.Warn("More information is available in PR (https://gitea.com/gitea/act_runner/pulls/184)")
+		if cfg.Container.NetworkMode == "bridge" {
+			cfg.Container.Network = ""
+		} else {
+			cfg.Container.Network = cfg.Container.NetworkMode
+		}
+		log.Warnf("the value of `container.network` will be set to '%s'", cfg.Container.Network)
 	}
 
 	return cfg, nil

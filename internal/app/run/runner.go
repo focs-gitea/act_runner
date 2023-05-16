@@ -197,7 +197,6 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		DefaultActionInstance: taskContext["gitea_default_actions_url"].GetStringValue(),
 		PlatformPicker:        r.labels.PickPlatform,
 		Vars:                  task.Vars,
-		NeedCreateNetwork:     strings.TrimSpace(r.cfg.Container.Network) == "",
 	}
 
 	rr, err := runner.New(runnerConfig)

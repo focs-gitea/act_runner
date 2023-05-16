@@ -45,6 +45,7 @@ container:
   # Specifies the network to which the container will connect.
   # Could be host, bridge or the name of a custom network.
   # If it's empty, act_runner will create a network automatically.
+  # More information is available in PR (https://gitea.com/gitea/act_runner/pulls/184)
   network: ""
   # Whether to use privileged mode or not when launching task containers (privileged mode is required for Docker-in-Docker).
   privileged: false
