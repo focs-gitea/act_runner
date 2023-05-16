@@ -107,7 +107,7 @@ func LoadDefault(file string) (*Config, error) {
 	// but we have to be compatible with it for now.
 	// rule: if the value of `container.network` is blank and the value of `container.network_mode` is not blank,
 	// then the value of `container.network` will be set to the value of `container.network_mode`.
-	if cfg.Container.Network == "" && cfg.Container.NetworkMode != "" {
+	if cfg.Container.NetworkMode != "" && cfg.Container.Network == "" {
 		cfg.Container.Network = cfg.Container.NetworkMode
 	}
 
