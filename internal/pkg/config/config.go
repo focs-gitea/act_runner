@@ -104,24 +104,17 @@ func LoadDefault(file string) (*Config, error) {
 		cfg.Runner.FetchInterval = 2 * time.Second
 	}
 
-	// although `container.network_mode` will be deprecated,
-	// but we have to be compatible with it for now.
-	// Compatible logic:
-	// 1. The following logic (point 2 and 3) will only be executed if the value of `container.network_mode` is not empty string and the value of `container.network` is empty string.
-	//    If you want to specify `container.network` to empty string to make `act_runner` create a new network for each job,
-	//    please make sure that `container.network_mode` is not exist in you configuration file.
-	// 2. If the value of `container.network_mode` is `bridge`, then the value of `container.network` will be set to empty string.
-	//		`act_runner` will create a new network for each job
-	// 3. Otherwise, the value of `container.network` will be set to the value of `container.network_mode`.
+	// although `container.network_mode` will be deprecated, but we have to be compatible with it for now.
 	if cfg.Container.NetworkMode != "" && cfg.Container.Network == "" {
-		log.Warnf("You are trying to use deprecated configuration item of `container.network_mode`: %s, it will be removed after Gitea 1.20 released", cfg.Container.NetworkMode)
-		log.Warn("More information is available in PR (https://gitea.com/gitea/act_runner/pulls/184)")
+		log.Warn("You are trying to use deprecated configuration item of `container.network_mode`, please use `container.network` instead.")
 		if cfg.Container.NetworkMode == "bridge" {
+			// Previously, if the value of `container.network_mode` is `bridge`, we will create a new network for job.
+			// But “bridge” is easily confused with the bridge network created by Docker by default.
+			// So we set the value of `container.network` to empty string to make `act_runner` automatically create a new network for job.
 			cfg.Container.Network = ""
 		} else {
 			cfg.Container.Network = cfg.Container.NetworkMode
 		}
-		log.Warnf("the value of `container.network` will be set to '%s'", cfg.Container.Network)
 	}
 
 	return cfg, nil
