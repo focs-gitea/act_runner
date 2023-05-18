@@ -155,13 +155,22 @@ func (r *registerInputs) assignToNext(stage registerStage, value string, cfg *co
 		return StageInputRunnerName
 	case StageInputRunnerName:
 		r.RunnerName = value
+		// if there are some labels configured in config file, skip input labels stage
 		if len(cfg.Runner.Labels) > 0 {
-			if validateLabels(cfg.Runner.Labels) == nil {
-				log.Info("Skip input labels, use labels defined in config file.")
-				r.Labels = cfg.Runner.Labels
-				return StageWaitingForRegistration
+			ls := make([]string, 0, len(cfg.Runner.Labels))
+			for _, l := range cfg.Runner.Labels {
+				_, err := labels.Parse(l)
+				if err != nil {
+					log.WithError(err).Warnf("ignored invalid label %q", l)
+					continue
+				}
+				ls = append(ls, l)
 			}
-			log.Warnf("Invalid labels in config file, please input again.")
+			if len(ls) == 0 {
+				log.Warn("no valid labels configured in config file, runner may not be able to pick up jobs")
+			}
+			r.Labels = ls
+			return StageWaitingForRegistration
 		}
 		return StageInputLabels
 	case StageInputLabels:
