@@ -88,3 +88,5 @@ require (
 )
 
 replace github.com/nektos/act => gitea.com/gitea/act v0.245.2-0.20230516060355-9283cfc9b166
+
+replace code.gitea.io/actions-proto-go => ../actions-proto-go

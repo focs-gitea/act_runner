@@ -27,6 +27,7 @@ type Config struct {
 		Insecure      bool              `yaml:"insecure"`
 		FetchTimeout  time.Duration     `yaml:"fetch_timeout"`
 		FetchInterval time.Duration     `yaml:"fetch_interval"`
+		Labels        []string          `yaml:"labels"`
 	} `yaml:"runner"`
 	Cache struct {
 		Enabled *bool  `yaml:"enabled"` // pointer to distinguish between false and not set, and it will be true if not set
