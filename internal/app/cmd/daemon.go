@@ -41,7 +41,7 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 		}
 
 		if len(cfg.Runner.Labels) > 0 {
-			// overwirte the labels in the config file to the state file
+			// overwirte the labels in the config file to the state file.
 			reg.Labels = cfg.Runner.Labels
 			if err := config.SaveRegistration(cfg.Runner.File, reg); err != nil {
 				return fmt.Errorf("failed to save runner config: %w", err)
