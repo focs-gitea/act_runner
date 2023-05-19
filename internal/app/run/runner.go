@@ -13,6 +13,7 @@ import (
 	"time"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
+	"github.com/bufbuild/connect-go"
 	"github.com/docker/docker/api/types/container"
 	"github.com/nektos/act/pkg/artifactcache"
 	"github.com/nektos/act/pkg/common"
@@ -213,4 +214,14 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 	execErr := executor(ctx)
 	reporter.SetOutputs(job.Outputs)
 	return execErr
+}
+
+func (r *Runner) Declare(ctx context.Context, labels []string) error {
+	_, err := r.client.Declare(ctx, connect.NewRequest(&runnerv1.DeclareRequest{
+		Labels: labels,
+	}))
+	if err != nil {
+		return err
+	}
+	return nil
 }

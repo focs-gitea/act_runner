@@ -40,6 +40,14 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			return fmt.Errorf("failed to load registration file: %w", err)
 		}
 
+		if len(cfg.Runner.Labels) > 0 {
+			// overwirte the labels in the config file to the state file
+			reg.Labels = cfg.Runner.Labels
+			if err := config.SaveRegistration(cfg.Runner.File, reg); err != nil {
+				return fmt.Errorf("failed to save runner config: %w", err)
+			}
+		}
+
 		ls := labels.Labels{}
 		for _, l := range reg.Labels {
 			label, err := labels.Parse(l)
@@ -68,6 +76,11 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 		)
 
 		runner := run.NewRunner(cfg, reg, cli)
+		// declare the labels of the runner before fetching tasks
+		err = runner.Declare(ctx, ls.Names())
+		if err != nil {
+			return fmt.Errorf("failed to declare runner: %w", err)
+		}
 		poller := poll.New(cfg, cli, runner)
 
 		poller.Poll(ctx)
