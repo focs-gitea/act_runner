@@ -117,3 +117,50 @@ It must be persisted, otherwise the runner would try to register again, using th
       - GITEA_INSTANCE_URL=<instance url>
       - GITEA_RUNNER_REGISTRATION_TOKEN=<registration token>
 ```
+
+### Running in a Kubernetes pod
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dind-runner
+spec:
+  restartPolicy: Never
+  volumes:
+  - name: docker-certs
+    emptyDir: {}
+  - name: runner-data
+    emptyDir: {}
+  containers:
+  - name: runner
+    image: gitea/act_runner:nightly
+    command: ["sh", "-c", "while ! nc -z localhost 2376 </dev/null; do echo 'waiting for docker daemon...'; sleep 5; done; /sbin/tini -- /opt/act/run.sh"]
+    env:
+    - name: DOCKER_HOST
+      value: tcp://localhost:2376
+    - name: DOCKER_CERT_PATH
+      value: /certs/client
+    - name: DOCKER_TLS_VERIFY
+      value: "1"
+    - name: GITEA_INSTANCE_URL
+      value: <instance url>
+    - name: GITEA_RUNNER_REGISTRATION_TOKEN
+      value: <registration token>
+    volumeMounts:
+    - name: docker-certs
+      mountPath: /certs
+    - name: runner-data
+      mountPath: /data
+
+  - name: daemon
+    image: docker:23.0.6-dind
+    env:
+    - name: DOCKER_TLS_CERTDIR
+      value: /certs
+    securityContext: 
+      privileged: true
+    volumeMounts:
+    - name: docker-certs
+      mountPath: /certs
+```
