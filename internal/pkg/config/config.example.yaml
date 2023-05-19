@@ -27,7 +27,7 @@ runner:
   # The interval for fetching the job from the Gitea instance.
   fetch_interval: 2s
   # The labels of a runner are used to determine which jobs the runner can run, and how to run them.
-  # Please enter sequences (equivalent to lists or arrays)..
+  # Please enter sequences (equivalent to lists or arrays).
   labels:
 
 cache:
