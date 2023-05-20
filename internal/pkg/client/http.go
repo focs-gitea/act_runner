@@ -39,9 +39,9 @@ func New(endpoint string, insecure bool, uuid, token, version string, opts ...co
 			if token != "" {
 				req.Header().Set(TokenHeader, token)
 			}
-			if version != "" {
-				req.Header().Set(VersionHeader, version)
-			}
+			// if version != "" {
+			// 	req.Header().Set(VersionHeader, version)
+			// }
 			return next(ctx, req)
 		}
 	})))

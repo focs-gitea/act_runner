@@ -217,11 +217,14 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 }
 
 func (r *Runner) Declare(ctx context.Context, labels []string) error {
-	_, err := r.client.Declare(ctx, connect.NewRequest(&runnerv1.DeclareRequest{
-		Labels: labels,
+	resp, err := r.client.Declare(ctx, connect.NewRequest(&runnerv1.DeclareRequest{
+		Version: ver.Version(),
+		Labels:  labels,
 	}))
 	if err != nil {
 		return err
 	}
+	log.Info("runner [%s], with version: [%s], with labels: [%v], declare successfully",
+		resp.Msg.Runner.Name, resp.Msg.Runner.Version, resp.Msg.Runner.Labels)
 	return nil
 }
