@@ -12,5 +12,5 @@ Here you will find usage and deployment examples that can be directly used in a 
 - [`kubernetes`](kubernetes)
   Contains examples of setting up deployments in Kubernetes clusters.
 
-- ['vm'](vm)
+- [`vm`](vm)
   Contains examples for setting up virtual or physical servers.
