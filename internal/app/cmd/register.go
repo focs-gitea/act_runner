@@ -297,7 +297,6 @@ func doRegister(cfg *config.Config, inputs *registerInputs) error {
 		cfg.Runner.Insecure,
 		"",
 		"",
-		ver.Version(),
 	)
 
 	for {

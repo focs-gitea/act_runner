@@ -18,7 +18,6 @@ import (
 	"gitea.com/gitea/act_runner/internal/pkg/config"
 	"gitea.com/gitea/act_runner/internal/pkg/envcheck"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
-	"gitea.com/gitea/act_runner/internal/pkg/ver"
 )
 
 func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command, args []string) error {
@@ -72,7 +71,6 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			cfg.Runner.Insecure,
 			reg.UUID,
 			reg.Token,
-			ver.Version(),
 		)
 
 		runner := run.NewRunner(cfg, reg, cli)
