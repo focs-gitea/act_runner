@@ -44,4 +44,10 @@ fi
 # Prevent reading the token from the act_runner process
 unset GITEA_RUNNER_REGISTRATION_TOKEN
 
+# wait for docker daemon
+while ! nc -z localhost 2376 </dev/null; do
+  echo 'waiting for docker daemon...'
+  sleep 5
+done
+
 act_runner daemon ${CONFIG_ARG}
