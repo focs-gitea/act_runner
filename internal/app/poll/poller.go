@@ -24,6 +24,9 @@ type Poller struct {
 	cfg    *config.Config
 }
 
+// taskIndex used to store the index of the last task fetched from the Gitea.
+var taskIndex int64
+
 func New(cfg *config.Config, client client.Client, runner *run.Runner) *Poller {
 	return &Poller{
 		client: client,
@@ -65,7 +68,9 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 	reqCtx, cancel := context.WithTimeout(ctx, p.cfg.Runner.FetchTimeout)
 	defer cancel()
 
-	resp, err := p.client.FetchTask(reqCtx, connect.NewRequest(&runnerv1.FetchTaskRequest{}))
+	resp, err := p.client.FetchTask(reqCtx, connect.NewRequest(&runnerv1.FetchTaskRequest{
+		TaskIndex: taskIndex,
+	}))
 	if errors.Is(err, context.DeadlineExceeded) {
 		err = nil
 	}
@@ -74,8 +79,18 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 		return nil, false
 	}
 
-	if resp == nil || resp.Msg == nil || resp.Msg.Task == nil {
+	if resp == nil || resp.Msg == nil {
 		return nil, false
 	}
+
+	taskIndex = resp.Msg.TaskIndex
+
+	if resp.Msg.Task == nil {
+		return nil, false
+	}
+
+	// got a task, use 0 index to focre query db in next request.
+	taskIndex = 0
+
 	return resp.Msg.Task, true
 }
