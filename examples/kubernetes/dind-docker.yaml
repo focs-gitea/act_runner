@@ -57,7 +57,10 @@ spec:
         - name: GITEA_INSTANCE_URL
           value: http://gitea-http.gitea.svc.cluster.local:3000
         - name: GITEA_RUNNER_REGISTRATION_TOKEN
-          value: "my-registration-token"
+          valueFrom:
+            secretKeyRef:
+              name: runner-secret
+              key: token
         volumeMounts:
         - name: docker-certs
           mountPath: /certs
