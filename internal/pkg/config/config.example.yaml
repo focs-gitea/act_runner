@@ -53,3 +53,7 @@ container:
   # The parent directory of a job's working directory.
   # If it's empty, /workspace will be used.
   workdir_parent:
+  # Volumes (including bind mounts) can be mounted to containers.
+  # This is a sequence. If the sequence is empty, any volume can be mounted.
+  # Used for `jobs.<job_id>.container.volumes` or `jobs.<job_id>.services.<service_id>.volumes`
+  valid_volumes:

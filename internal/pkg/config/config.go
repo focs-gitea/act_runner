@@ -35,11 +35,12 @@ type Config struct {
 		Port    uint16 `yaml:"port"`
 	} `yaml:"cache"`
 	Container struct {
-		Network       string `yaml:"network"`
-		NetworkMode   string `yaml:"network_mode"` // Deprecated: use Network instead. Could be removed after Gitea 1.20
-		Privileged    bool   `yaml:"privileged"`
-		Options       string `yaml:"options"`
-		WorkdirParent string `yaml:"workdir_parent"`
+		Network       string   `yaml:"network"`
+		NetworkMode   string   `yaml:"network_mode"` // Deprecated: use Network instead. Could be removed after Gitea 1.20
+		Privileged    bool     `yaml:"privileged"`
+		Options       string   `yaml:"options"`
+		WorkdirParent string   `yaml:"workdir_parent"`
+		ValidVolumes  []string `yaml:"valid_volumes"`
 	} `yaml:"container"`
 }
 
