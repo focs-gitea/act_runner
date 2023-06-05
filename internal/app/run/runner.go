@@ -224,7 +224,7 @@ func (r *Runner) Declare(ctx context.Context, labels []string) error {
 	if err != nil {
 		return err
 	}
-	log.Info("runner [%s], with version: [%s], with labels: [%v], declare successfully",
+	log.Infof("runner: %s, with version: %s, with labels: %v, declare successfully",
 		resp.Msg.Runner.Name, resp.Msg.Runner.Version, resp.Msg.Runner.Labels)
 	return nil
 }
