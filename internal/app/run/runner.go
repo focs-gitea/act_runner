@@ -200,6 +200,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		PlatformPicker:       r.labels.PickPlatform,
 		Vars:                 task.Vars,
 		ValidVolumes:         r.cfg.Container.ValidVolumes,
+		UseGitIgnore:         r.cfg.Runner.UseGitIgnore == nil || *r.cfg.Runner.UseGitIgnore,
 	}
 
 	rr, err := runner.New(runnerConfig)

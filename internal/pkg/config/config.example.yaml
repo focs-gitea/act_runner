@@ -31,6 +31,8 @@ runner:
   # If it's empty when registering, it will ask for inputting labels.
   # If it's empty when execute `deamon`, will use labels in `.runner` file.
   labels: []
+  # When this is set to true, the .gitignore will be used for actions
+  use_gitignore: true
 
 cache:
   # Enable cache server to use actions/cache.

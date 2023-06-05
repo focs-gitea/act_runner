@@ -30,6 +30,7 @@ type Runner struct {
 	FetchTimeout  time.Duration     `yaml:"fetch_timeout"`  // FetchTimeout specifies the timeout duration for fetching resources.
 	FetchInterval time.Duration     `yaml:"fetch_interval"` // FetchInterval specifies the interval duration for fetching resources.
 	Labels        []string          `yaml:"labels"`         // Labels specifies the labels of the runner. Labels are declared on each startup
+	UseGitIgnore  *bool             `yaml:"use_gitignore"`  // UseGitIgnore specifies the UseGitIgnore option. It is a pointer to distinguish between false and not set. If not set, it will be true.
 }
 
 // Cache represents the configuration for caching.
@@ -126,6 +127,10 @@ func LoadDefault(file string) (*Config, error) {
 	}
 	if cfg.Runner.FetchInterval <= 0 {
 		cfg.Runner.FetchInterval = 2 * time.Second
+	}
+	if cfg.Runner.UseGitIgnore == nil {
+		b := true
+		cfg.Runner.UseGitIgnore = &b
 	}
 
 	// although `container.network_mode` will be deprecated, but we have to be compatible with it for now.
