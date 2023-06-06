@@ -46,7 +46,7 @@ type Container struct {
 	Privileged    bool     `yaml:"privileged"`     // Privileged indicates whether the container runs in privileged mode.
 	Options       string   `yaml:"options"`        // Options specifies additional options for the container.
 	WorkdirParent string   `yaml:"workdir_parent"` // WorkdirParent specifies the parent directory for the container's working directory.
-	ValidVolumes  []string `yaml:"valid_volumes"`
+	ValidVolumes  []string `yaml:"valid_volumes"`  // ValidVolumes specifies the volumes (including bind mounts) can be mounted to containers.
 }
 
 // Config represents the overall configuration.
