@@ -46,7 +46,6 @@ func runRegister(ctx context.Context, regArgs *registerArgs, configFile *string)
 			log.Warnf("Runner in user-mode.")
 		}
 
-		log.Warnf("configFile: %s", *configFile)
 		if regArgs.NoInteractive {
 			if err := registerNoInteractive(*configFile, regArgs); err != nil {
 				return err

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -22,6 +23,7 @@ import (
 	"gitea.com/gitea/act_runner/internal/pkg/config"
 	"gitea.com/gitea/act_runner/internal/pkg/envcheck"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
+	"gitea.com/gitea/act_runner/internal/pkg/utils"
 )
 
 func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command, args []string) error {
@@ -42,11 +44,13 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			return fmt.Errorf("failed to load registration file: %w", err)
 		}
 
+		var overwrite bool
 		if len(cfg.Runner.Labels) > 0 {
-			// overwirte the labels in the config file to the state file.
-			reg.Labels = cfg.Runner.Labels
-			if err := config.SaveRegistration(cfg.Runner.File, reg); err != nil {
-				return fmt.Errorf("failed to save runner config: %w", err)
+			// Determine if the labels in the `.runner` file are the same as the labels in config.
+			if isEqual := utils.AreStrSlicesElemsEqual(cfg.Runner.Labels, reg.Labels); !isEqual {
+				// If not, set `overwrite` to true, and will overwrite `.runner` after declaring successfully.
+				overwrite = true
+				reg.Labels = cfg.Runner.Labels
 			}
 		}
 
@@ -78,10 +82,24 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 
 		runner := run.NewRunner(cfg, reg, cli)
 		// declare the labels of the runner before fetching tasks
-		err = runner.Declare(ctx, ls.Names())
-		if err != nil {
-			return fmt.Errorf("failed to declare runner: %w", err)
+		resp, err := runner.Declare(ctx, ls.Names())
+		if err != nil && connect.CodeOf(err) == connect.CodeUnimplemented {
+			// Gitea instance is older version. skip declare step.
+			log.Warn("Because the Gitea instance is an old version, skip declare labels and version.")
+		} else if err != nil {
+			log.WithError(err).Error("fail to invoke Declare")
+			return err
+		} else {
+			log.Infof("runner: %s, with version: %s, with labels: %v, declare successfully",
+				resp.Msg.Runner.Name, resp.Msg.Runner.Version, resp.Msg.Runner.Labels)
+			if overwrite {
+				// overwrite .runner file
+				if err := config.SaveRegistration(cfg.Runner.File, reg); err != nil {
+					return fmt.Errorf("failed to save runner config: %w", err)
+				}
+			}
 		}
+
 		poller := poll.New(cfg, cli, runner)
 
 		poller.Poll(ctx)

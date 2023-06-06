@@ -216,15 +216,9 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 	return execErr
 }
 
-func (r *Runner) Declare(ctx context.Context, labels []string) error {
-	resp, err := r.client.Declare(ctx, connect.NewRequest(&runnerv1.DeclareRequest{
+func (r *Runner) Declare(ctx context.Context, labels []string) (*connect.Response[runnerv1.DeclareResponse], error) {
+	return r.client.Declare(ctx, connect.NewRequest(&runnerv1.DeclareRequest{
 		Version: ver.Version(),
 		Labels:  labels,
 	}))
-	if err != nil {
-		return err
-	}
-	log.Infof("runner: %s, with version: %s, with labels: %v, declare successfully",
-		resp.Msg.Runner.Name, resp.Msg.Runner.Version, resp.Msg.Runner.Labels)
-	return nil
 }
