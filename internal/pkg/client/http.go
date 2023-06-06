@@ -28,7 +28,7 @@ func getHttpClient(endpoint string, insecure bool) *http.Client {
 }
 
 // New returns a new runner client.
-func New(endpoint string, insecure bool, uuid, token string, opts ...connect.ClientOption) *HTTPClient {
+func New(endpoint string, insecure bool, uuid, token, version string, opts ...connect.ClientOption) *HTTPClient {
 	baseURL := strings.TrimRight(endpoint, "/") + "/api/actions"
 
 	opts = append(opts, connect.WithInterceptors(connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
@@ -38,6 +38,10 @@ func New(endpoint string, insecure bool, uuid, token string, opts ...connect.Cli
 			}
 			if token != "" {
 				req.Header().Set(TokenHeader, token)
+			}
+			// TODO: version will be removed from request header after Gitea 1.20 released.
+			if version != "" {
+				req.Header().Set(VersionHeader, version)
 			}
 			return next(ctx, req)
 		}
