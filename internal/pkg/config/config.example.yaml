@@ -58,4 +58,7 @@ container:
   # valid_volumes:
   #   - data
   #   - /etc/secrets
+  # If you don't want to allow any volume, please use the following configuration:
+  # valid_volumes:
+  #   - '!'
   valid_volumes: []
