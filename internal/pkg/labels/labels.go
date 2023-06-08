@@ -90,3 +90,18 @@ func (l Labels) Names() []string {
 	}
 	return names
 }
+
+func (l Labels) ToStrings() []string {
+	ls := make([]string, 0, len(l))
+	for _, label := range l {
+		lbl := label.Name
+		if label.Schema != "" {
+			lbl += ":" + label.Schema
+			if label.Arg != "" {
+				lbl += ":" + label.Arg
+			}
+		}
+		ls = append(ls, lbl)
+	}
+	return ls
+}

@@ -23,7 +23,6 @@ import (
 	"gitea.com/gitea/act_runner/internal/pkg/config"
 	"gitea.com/gitea/act_runner/internal/pkg/envcheck"
 	"gitea.com/gitea/act_runner/internal/pkg/labels"
-	"gitea.com/gitea/act_runner/internal/pkg/utils"
 	"gitea.com/gitea/act_runner/internal/pkg/ver"
 )
 
@@ -45,18 +44,13 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			return fmt.Errorf("failed to load registration file: %w", err)
 		}
 
-		var overwrite bool
+		lbls := reg.Labels
 		if len(cfg.Runner.Labels) > 0 {
-			// Determine if the labels in the `.runner` file are the same as the labels in config.
-			if isEqual := utils.AreStrSlicesElemsEqual(cfg.Runner.Labels, reg.Labels); !isEqual {
-				// If not, set `overwrite` to true, and will overwrite `.runner` after declaring successfully.
-				overwrite = true
-				reg.Labels = cfg.Runner.Labels
-			}
+			lbls = cfg.Runner.Labels
 		}
 
 		ls := labels.Labels{}
-		for _, l := range reg.Labels {
+		for _, l := range lbls {
 			label, err := labels.Parse(l)
 			if err != nil {
 				log.WithError(err).Warnf("ignored invalid label %q", l)
@@ -94,11 +88,10 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 		} else {
 			log.Infof("runner: %s, with version: %s, with labels: %v, declare successfully",
 				resp.Msg.Runner.Name, resp.Msg.Runner.Version, resp.Msg.Runner.Labels)
-			if overwrite {
-				// overwrite .runner file
-				if err := config.SaveRegistration(cfg.Runner.File, reg); err != nil {
-					return fmt.Errorf("failed to save runner config: %w", err)
-				}
+			// if declare successfully, overrides the labels in .runner file that are valid in config file.
+			reg.Labels = ls.ToStrings()
+			if err := config.SaveRegistration(cfg.Runner.File, reg); err != nil {
+				return fmt.Errorf("failed to save runner config: %w", err)
 			}
 		}
 
