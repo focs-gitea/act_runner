@@ -6,7 +6,6 @@ package cmd
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -258,7 +257,7 @@ func registerNoInteractive(configFile string, regArgs *registerArgs) error {
 		return nil
 	}
 	if err := doRegister(cfg, inputs); err != nil {
-		return errors.New("Failed to register runner: " + err.Error())
+		return fmt.Errorf("Failed to register runner: %w", err)
 	}
 	log.Infof("Runner registered successfully.")
 	return nil
