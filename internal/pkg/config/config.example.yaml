@@ -53,12 +53,13 @@ container:
   # The parent directory of a job's working directory.
   # If it's empty, /workspace will be used.
   workdir_parent:
-  # Volumes (including bind mounts) can be mounted to containers. If it's empty, any volume can be mounted.
-  # For example, if you only allow containers to mount the `data` volume and the `/etc/secrets` directory, you should change the config to:
+  # Volumes (including bind mounts) can be mounted to containers. Glob syntax is supported, see https://github.com/gobwas/glob
+  # You can specify multiple volumes. If the sequence is empty, no volumes can be mounted.
+  # For example, if you only allow containers to mount the `data` volume and all the json files in `/src`, you should change the config to:
   # valid_volumes:
   #   - data
-  #   - /etc/secrets
-  # If you don't want to allow any volume, please use the following configuration:
+  #   - /src/*.json
+  # If you want to allow any volume, please use the following configuration:
   # valid_volumes:
-  #   - '!'
+  #   - '**'
   valid_volumes: []
