@@ -262,19 +262,16 @@ func registerNoInteractive(configFile string, regArgs *registerArgs) error {
 		Labels:       defaultLabels,
 	}
 	regArgs.Labels = strings.TrimSpace(regArgs.Labels)
+	// command line flag.
 	if regArgs.Labels != "" {
 		inputs.Labels = strings.Split(regArgs.Labels, ",")
 	}
-	if configFile != "" {
-		if len(cfg.Runner.Labels) > 0 {
-			if regArgs.Labels != "" {
-				log.Warn("Labels from command will be ignored, use labels defined in config file.")
-			}
-			inputs.Labels = cfg.Runner.Labels
-		} else {
-			log.Error("Please specify labels in config, and re-regitser.")
-			return nil
+	// specify labels in config file.
+	if len(cfg.Runner.Labels) > 0 {
+		if regArgs.Labels != "" {
+			log.Warn("Labels from command will be ignored, use labels defined in config file.")
 		}
+		inputs.Labels = cfg.Runner.Labels
 	}
 
 	if inputs.RunnerName == "" {
