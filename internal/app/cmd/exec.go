@@ -39,7 +39,7 @@ type executeArgs struct {
 	envs                  []string
 	envfile               string
 	secrets               []string
-	defaultActionsUrl     string
+	defaultActionsUrls    []string
 	insecureSecrets       bool
 	privileged            bool
 	usernsMode            string
@@ -357,6 +357,24 @@ func runExec(ctx context.Context, execArgs *executeArgs) func(cmd *cobra.Command
 		log.Infof("cache handler listens on: %v", handler.ExternalURL())
 		execArgs.cacheHandler = handler
 
+		if len(execArgs.artifactServerAddr) == 0 {
+			if ip := common.GetOutboundIP(); ip == nil {
+				return fmt.Errorf("unable to determine outbound IP address")
+			} else {
+				execArgs.artifactServerAddr = ip.String()
+			}
+		}
+
+		if len(execArgs.artifactServerPath) == 0 {
+			tempDir, err := os.MkdirTemp("", "gitea-act-")
+			if err != nil {
+				fmt.Println(err)
+			}
+			defer os.RemoveAll(tempDir)
+
+			execArgs.artifactServerPath = tempDir
+		}
+
 		// run the plan
 		config := &runner.Config{
 			Workdir:               execArgs.Workdir(),
@@ -381,13 +399,14 @@ func runExec(ctx context.Context, execArgs *executeArgs) func(cmd *cobra.Command
 			AutoRemove:         true,
 			ArtifactServerPath: execArgs.artifactServerPath,
 			ArtifactServerPort: execArgs.artifactServerPort,
+			ArtifactServerAddr: execArgs.artifactServerAddr,
 			NoSkipCheckout:     execArgs.noSkipCheckout,
 			// PresetGitHubContext:   preset,
 			// EventJSON:             string(eventJSON),
-			ContainerNamePrefix:   fmt.Sprintf("GITEA-ACTIONS-TASK-%s", eventName),
-			ContainerMaxLifetime:  maxLifetime,
-			ContainerNetworkMode:  container.NetworkMode(execArgs.network),
-			DefaultActionInstance: execArgs.defaultActionsUrl,
+			ContainerNamePrefix:  fmt.Sprintf("GITEA-ACTIONS-TASK-%s", eventName),
+			ContainerMaxLifetime: maxLifetime,
+			ContainerNetworkMode: container.NetworkMode(execArgs.network),
+			DefaultActionsURLs:   execArgs.defaultActionsUrls,
 			PlatformPicker: func(_ []string) string {
 				return execArgs.image
 			},
@@ -401,16 +420,6 @@ func runExec(ctx context.Context, execArgs *executeArgs) func(cmd *cobra.Command
 		r, err := runner.New(config)
 		if err != nil {
 			return err
-		}
-
-		if len(execArgs.artifactServerPath) == 0 {
-			tempDir, err := os.MkdirTemp("", "gitea-act-")
-			if err != nil {
-				fmt.Println(err)
-			}
-			defer os.RemoveAll(tempDir)
-
-			execArgs.artifactServerPath = tempDir
 		}
 
 		artifactCancel := artifacts.Serve(ctx, execArgs.artifactServerPath, execArgs.artifactServerAddr, execArgs.artifactServerPort)
@@ -459,8 +468,9 @@ func loadExecCmd(ctx context.Context) *cobra.Command {
 	execCmd.Flags().StringArrayVarP(&execArg.containerCapDrop, "container-cap-drop", "", []string{}, "kernel capabilities to remove from the workflow containers (e.g. --container-cap-drop SYS_PTRACE)")
 	execCmd.Flags().StringVarP(&execArg.containerOptions, "container-opts", "", "", "container options")
 	execCmd.PersistentFlags().StringVarP(&execArg.artifactServerPath, "artifact-server-path", "", ".", "Defines the path where the artifact server stores uploads and retrieves downloads from. If not specified the artifact server will not start.")
+	execCmd.PersistentFlags().StringVarP(&execArg.artifactServerAddr, "artifact-server-addr", "", "", "Defines the address where the artifact server listens")
 	execCmd.PersistentFlags().StringVarP(&execArg.artifactServerPort, "artifact-server-port", "", "34567", "Defines the port where the artifact server listens (will only bind to localhost).")
-	execCmd.PersistentFlags().StringVarP(&execArg.defaultActionsUrl, "default-actions-url", "", "https://gitea.com", "Defines the default url of action instance.")
+	execCmd.PersistentFlags().StringArrayVarP(&execArg.defaultActionsUrls, "default-actions-url", "", []string{"https://gitea.com", "https://github.com"}, "Defines the default url list of action instance.")
 	execCmd.PersistentFlags().BoolVarP(&execArg.noSkipCheckout, "no-skip-checkout", "", false, "Do not skip actions/checkout")
 	execCmd.PersistentFlags().BoolVarP(&execArg.debug, "debug", "d", false, "enable debug log")
 	execCmd.PersistentFlags().BoolVarP(&execArg.dryrun, "dryrun", "n", false, "dryrun mode")
