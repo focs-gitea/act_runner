@@ -8,7 +8,10 @@ cd /data
 
 CONFIG_ARG=""
 if [[ ! -z "${CONFIG_FILE}" ]]; then
-  CONFIG_ARG="--config ${CONFIG_FILE}"
+  CONFIG_ARG="${CONFIG_ARG} --config ${CONFIG_FILE}"
+fi
+if [[ ! -z "${GITEA_RUNNER_LABELS}" ]]; then
+  CONFIG_ARG="${CONFIG_ARG} --labels ${GITEA_RUNNER_LABELS}"
 fi
 
 # Use the same ENV variable names as https://github.com/vegardit/docker-gitea-act-runner
@@ -26,10 +29,7 @@ if [[ ! -s .runner ]]; then
       --instance "${GITEA_INSTANCE_URL}" \
       --token    "${GITEA_RUNNER_REGISTRATION_TOKEN}" \
       --name     "${GITEA_RUNNER_NAME:-`hostname`}" \
-      --labels   "${GITEA_RUNNER_LABELS}" \
-      ${CONFIG_ARG} --no-interactive > /tmp/reg.log 2>&1
-
-    cat /tmp/reg.log
+      ${CONFIG_ARG} --no-interactive 2>&1 | tee /tmp/reg.log 
 
     cat /tmp/reg.log | grep 'Runner registered successfully' > /dev/null
     if [[ $? -eq 0 ]]; then
