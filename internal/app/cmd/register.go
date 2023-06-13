@@ -338,10 +338,11 @@ func doRegister(cfg *config.Config, inputs *registerInputs) error {
 	}
 	// register new runner.
 	resp, err := cli.Register(ctx, connect.NewRequest(&runnerv1.RegisterRequest{
-		Name:    reg.Name,
-		Token:   reg.Token,
-		Version: ver.Version(),
-		Labels:  ls,
+		Name:        reg.Name,
+		Token:       reg.Token,
+		Version:     ver.Version(),
+		AgentLabels: ls, // Could be removed after Gitea 1.20
+		Labels:      ls,
 	}))
 	if err != nil {
 		log.WithError(err).Error("poller: cannot register new runner")
