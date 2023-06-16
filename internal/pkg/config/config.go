@@ -29,6 +29,7 @@ type Runner struct {
 	Insecure      bool              `yaml:"insecure"`       // Insecure indicates whether the runner operates in an insecure mode.
 	FetchTimeout  time.Duration     `yaml:"fetch_timeout"`  // FetchTimeout specifies the timeout duration for fetching resources.
 	FetchInterval time.Duration     `yaml:"fetch_interval"` // FetchInterval specifies the interval duration for fetching resources.
+	Labels        []string          `yaml:"labels"`         // Labels specifies the labels of the runner. Labels are declared on each startup
 }
 
 // Cache represents the configuration for caching.
@@ -62,14 +63,12 @@ type Config struct {
 func LoadDefault(file string) (*Config, error) {
 	cfg := &Config{}
 	if file != "" {
-		f, err := os.Open(file)
+		content, err := os.ReadFile(file)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("open config file %q: %w", file, err)
 		}
-		defer f.Close()
-		decoder := yaml.NewDecoder(f)
-		if err := decoder.Decode(&cfg); err != nil {
-			return nil, err
+		if err := yaml.Unmarshal(content, cfg); err != nil {
+			return nil, fmt.Errorf("parse config file %q: %w", file, err)
 		}
 	}
 	compatibleWithOldEnvs(file != "", cfg)
