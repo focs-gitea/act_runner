@@ -24,8 +24,8 @@ type Poller struct {
 	cfg    *config.Config
 }
 
-// taskVersion used to store the version of the last task fetched from the Gitea.
-var taskVersion int64
+// tasksVersion used to store the version of the last task fetched from the Gitea.
+var tasksVersion int64
 
 func New(cfg *config.Config, client client.Client, runner *run.Runner) *Poller {
 	return &Poller{
@@ -69,7 +69,7 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 	defer cancel()
 
 	resp, err := p.client.FetchTask(reqCtx, connect.NewRequest(&runnerv1.FetchTaskRequest{
-		TaskVersion: taskVersion,
+		TasksVersion: tasksVersion,
 	}))
 	if errors.Is(err, context.DeadlineExceeded) {
 		err = nil
@@ -83,14 +83,14 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 		return nil, false
 	}
 
-	taskVersion = resp.Msg.TaskVersion
+	tasksVersion = resp.Msg.TasksVersion
 
 	if resp.Msg.Task == nil {
 		return nil, false
 	}
 
-	// got a task, set `taskVersion` to zero to focre query db in next request.
-	taskVersion = 0
+	// got a task, set `tasksVersion` to zero to focre query db in next request.
+	tasksVersion = 0
 
 	return resp.Msg.Task, true
 }
