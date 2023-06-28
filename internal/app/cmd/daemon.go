@@ -63,9 +63,18 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 		}
 
 		if ls.RequireDocker() {
-			if err := envcheck.CheckIfDockerRunning(ctx, cfg); err != nil {
+			dockerSocketPath, err := getDockerSocketPath(cfg.Container.DockerHost)
+			if err != nil {
 				return err
 			}
+			if err := envcheck.CheckIfDockerRunning(ctx, dockerSocketPath); err != nil {
+				return err
+			}
+			if cfg.Container.DockerHost == "" {
+				cfg.Container.DockerHost = dockerSocketPath
+			}
+
+			os.Setenv("DOCKER_HOST", dockerSocketPath)
 		}
 
 		cli := client.New(
