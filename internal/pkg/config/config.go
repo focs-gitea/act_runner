@@ -29,6 +29,7 @@ type Runner struct {
 	Insecure      bool              `yaml:"insecure"`       // Insecure indicates whether the runner operates in an insecure mode.
 	FetchTimeout  time.Duration     `yaml:"fetch_timeout"`  // FetchTimeout specifies the timeout duration for fetching resources.
 	FetchInterval time.Duration     `yaml:"fetch_interval"` // FetchInterval specifies the interval duration for fetching resources.
+	Labels        []string          `yaml:"labels"`         // Labels specifies the labels of the runner. Labels are declared on each startup
 }
 
 // Cache represents the configuration for caching.
@@ -41,11 +42,18 @@ type Cache struct {
 
 // Container represents the configuration for the container.
 type Container struct {
-	Network       string `yaml:"network"`        // Network specifies the network for the container.
-	NetworkMode   string `yaml:"network_mode"`   // Deprecated: use Network instead. Could be removed after Gitea 1.20
-	Privileged    bool   `yaml:"privileged"`     // Privileged indicates whether the container runs in privileged mode.
-	Options       string `yaml:"options"`        // Options specifies additional options for the container.
-	WorkdirParent string `yaml:"workdir_parent"` // WorkdirParent specifies the parent directory for the container's working directory.
+	Network       string   `yaml:"network"`        // Network specifies the network for the container.
+	NetworkMode   string   `yaml:"network_mode"`   // Deprecated: use Network instead. Could be removed after Gitea 1.20
+	Privileged    bool     `yaml:"privileged"`     // Privileged indicates whether the container runs in privileged mode.
+	Options       string   `yaml:"options"`        // Options specifies additional options for the container.
+	WorkdirParent string   `yaml:"workdir_parent"` // WorkdirParent specifies the parent directory for the container's working directory.
+	ValidVolumes  []string `yaml:"valid_volumes"`  // ValidVolumes specifies the volumes (including bind mounts) can be mounted to containers.
+	DockerHost    string   `yaml:"docker_host"`    // DockerHost specifies the Docker host. It overrides the value specified in environment variable DOCKER_HOST.
+}
+
+// Host represents the configuration for the host.
+type Host struct {
+	WorkdirParent string `yaml:"workdir_parent"` // WorkdirParent specifies the parent directory for the host's working directory.
 }
 
 // Config represents the overall configuration.
@@ -54,6 +62,7 @@ type Config struct {
 	Runner    Runner    `yaml:"runner"`    // Runner represents the configuration for the runner.
 	Cache     Cache     `yaml:"cache"`     // Cache represents the configuration for caching.
 	Container Container `yaml:"container"` // Container represents the configuration for the container.
+	Host      Host      `yaml:"host"`      // Host represents the configuration for the host.
 }
 
 // LoadDefault returns the default configuration.
@@ -61,14 +70,12 @@ type Config struct {
 func LoadDefault(file string) (*Config, error) {
 	cfg := &Config{}
 	if file != "" {
-		f, err := os.Open(file)
+		content, err := os.ReadFile(file)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("open config file %q: %w", file, err)
 		}
-		defer f.Close()
-		decoder := yaml.NewDecoder(f)
-		if err := decoder.Decode(&cfg); err != nil {
-			return nil, err
+		if err := yaml.Unmarshal(content, cfg); err != nil {
+			return nil, fmt.Errorf("parse config file %q: %w", file, err)
 		}
 	}
 	compatibleWithOldEnvs(file != "", cfg)
@@ -109,6 +116,10 @@ func LoadDefault(file string) (*Config, error) {
 	}
 	if cfg.Container.WorkdirParent == "" {
 		cfg.Container.WorkdirParent = "workspace"
+	}
+	if cfg.Host.WorkdirParent == "" {
+		home, _ := os.UserHomeDir()
+		cfg.Container.WorkdirParent = filepath.Join(home, ".cache", "act")
 	}
 	if cfg.Runner.FetchTimeout <= 0 {
 		cfg.Runner.FetchTimeout = 5 * time.Second

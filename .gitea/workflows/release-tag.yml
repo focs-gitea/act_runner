@@ -69,11 +69,6 @@ jobs:
         with:
           fetch-depth: 0 # all history for all branches and tags
 
-      - name: dockerfile lint check
-        uses: https://github.com/hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: Dockerfile
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -106,3 +101,18 @@ jobs:
           tags: |
             ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}
             ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ env.DOCKER_LATEST }}
+
+      - name: Build and push dind-rootless
+        uses: docker/build-push-action@v4
+        env:
+          ACTIONS_RUNTIME_TOKEN: '' # See https://gitea.com/gitea/act_runner/issues/119
+        with:
+          context: .
+          file: ./Dockerfile.rootless
+          platforms: |
+            linux/amd64
+            linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}-dind-rootless
+            ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ env.DOCKER_LATEST }}-dind-rootless

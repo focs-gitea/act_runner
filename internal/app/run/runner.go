@@ -13,6 +13,7 @@ import (
 	"time"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
+	"github.com/bufbuild/connect-go"
 	"github.com/docker/docker/api/types/container"
 	"github.com/nektos/act/pkg/artifactcache"
 	"github.com/nektos/act/pkg/common"
@@ -174,8 +175,9 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 	runnerConfig := &runner.Config{
 		// On Linux, Workdir will be like "/<parent_directory>/<owner>/<repo>"
 		// On Windows, Workdir will be like "\<parent_directory>\<owner>\<repo>"
-		Workdir:     filepath.FromSlash(fmt.Sprintf("/%s/%s", r.cfg.Container.WorkdirParent, preset.Repository)),
-		BindWorkdir: false,
+		Workdir:        filepath.FromSlash(fmt.Sprintf("/%s/%s", r.cfg.Container.WorkdirParent, preset.Repository)),
+		BindWorkdir:    false,
+		ActionCacheDir: filepath.FromSlash(r.cfg.Host.WorkdirParent),
 
 		ReuseContainers:      false,
 		ForcePull:            false,
@@ -197,6 +199,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		DefaultActionsURLs:   parseDefaultActionsURLs(taskContext["gitea_default_actions_url"].GetStringValue()),
 		PlatformPicker:       r.labels.PickPlatform,
 		Vars:                 task.Vars,
+		ValidVolumes:         r.cfg.Container.ValidVolumes,
 	}
 
 	rr, err := runner.New(runnerConfig)
@@ -223,4 +226,11 @@ func parseDefaultActionsURLs(s string) []string {
 		trimmed = append(trimmed, t)
 	}
 	return trimmed
+}
+
+func (r *Runner) Declare(ctx context.Context, labels []string) (*connect.Response[runnerv1.DeclareResponse], error) {
+	return r.client.Declare(ctx, connect.NewRequest(&runnerv1.DeclareRequest{
+		Version: ver.Version(),
+		Labels:  labels,
+	}))
 }
