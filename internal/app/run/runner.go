@@ -7,13 +7,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/bufbuild/connect-go"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
-	"github.com/bufbuild/connect-go"
 	"github.com/docker/docker/api/types/container"
 	"github.com/nektos/act/pkg/artifactcache"
 	"github.com/nektos/act/pkg/common"
@@ -179,27 +179,27 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		BindWorkdir:    false,
 		ActionCacheDir: filepath.FromSlash(r.cfg.Host.WorkdirParent),
 
-		ReuseContainers:      false,
-		ForcePull:            false,
-		ForceRebuild:         false,
-		LogOutput:            true,
-		JSONLogger:           false,
-		Env:                  r.envs,
-		Secrets:              task.Secrets,
-		GitHubInstance:       strings.TrimSuffix(r.client.Address(), "/"),
-		AutoRemove:           true,
-		NoSkipCheckout:       true,
-		PresetGitHubContext:  preset,
-		EventJSON:            string(eventJSON),
-		ContainerNamePrefix:  fmt.Sprintf("GITEA-ACTIONS-TASK-%d", task.Id),
-		ContainerMaxLifetime: maxLifetime,
-		ContainerNetworkMode: container.NetworkMode(r.cfg.Container.Network),
-		ContainerOptions:     r.cfg.Container.Options,
-		Privileged:           r.cfg.Container.Privileged,
-		DefaultActionsURLs:   parseDefaultActionsURLs(taskContext["gitea_default_actions_url"].GetStringValue()),
-		PlatformPicker:       r.labels.PickPlatform,
-		Vars:                 task.Vars,
-		ValidVolumes:         r.cfg.Container.ValidVolumes,
+		ReuseContainers:       false,
+		ForcePull:             false,
+		ForceRebuild:          false,
+		LogOutput:             true,
+		JSONLogger:            false,
+		Env:                   r.envs,
+		Secrets:               task.Secrets,
+		GitHubInstance:        strings.TrimSuffix(r.client.Address(), "/"),
+		AutoRemove:            true,
+		NoSkipCheckout:        true,
+		PresetGitHubContext:   preset,
+		EventJSON:             string(eventJSON),
+		ContainerNamePrefix:   fmt.Sprintf("GITEA-ACTIONS-TASK-%d", task.Id),
+		ContainerMaxLifetime:  maxLifetime,
+		ContainerNetworkMode:  container.NetworkMode(r.cfg.Container.Network),
+		ContainerOptions:      r.cfg.Container.Options,
+		Privileged:            r.cfg.Container.Privileged,
+		DefaultActionInstance: taskContext["gitea_default_actions_url"].GetStringValue(),
+		PlatformPicker:        r.labels.PickPlatform,
+		Vars:                  task.Vars,
+		ValidVolumes:          r.cfg.Container.ValidVolumes,
 	}
 
 	rr, err := runner.New(runnerConfig)
@@ -216,16 +216,6 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 	execErr := executor(ctx)
 	reporter.SetOutputs(job.Outputs)
 	return execErr
-}
-
-func parseDefaultActionsURLs(s string) []string {
-	urls := strings.Split(s, ",")
-	trimmed := make([]string, 0, len(urls))
-	for _, u := range urls {
-		t := strings.TrimRight(strings.TrimSpace(u), "/")
-		trimmed = append(trimmed, t)
-	}
-	return trimmed
 }
 
 func (r *Runner) Declare(ctx context.Context, labels []string) (*connect.Response[runnerv1.DeclareResponse], error) {
