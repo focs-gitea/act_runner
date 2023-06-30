@@ -159,3 +159,17 @@ func initLogging(cfg *config.Config) {
 		}
 	}
 }
+
+func getDockerSocketPath(configDockerHost string) (string, error) {
+	// a `-` means don't mount the docker socket to job containers
+	if configDockerHost != "" && configDockerHost != "-" {
+		return configDockerHost, nil
+	}
+
+	socket, found := os.LookupEnv("DOCKER_HOST")
+	if found {
+		return socket, nil
+	}
+
+	return "", fmt.Errorf("daemon Docker Engine socket not found and docker_host config was invalid")
+}
