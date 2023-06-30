@@ -6,8 +6,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 )
 
 func getDockerSocketPath(configDockerHost string) (string, error) {
@@ -17,7 +15,7 @@ func getDockerSocketPath(configDockerHost string) (string, error) {
 	if configDockerHost != "" && configDockerHost != "-" {
 		socketPath = configDockerHost
 	} else {
-		socket, found := socketLocation()
+		socket, found := os.LookupEnv("DOCKER_HOST")
 		if !found {
 			return "", fmt.Errorf("daemon Docker Engine socket not found and docker_host config was invalid")
 		} else {
@@ -26,31 +24,4 @@ func getDockerSocketPath(configDockerHost string) (string, error) {
 	}
 
 	return socketPath, nil
-}
-
-var commonSocketPaths = []string{
-	"/var/run/docker.sock",
-	"/var/run/podman/podman.sock",
-	"$HOME/.colima/docker.sock",
-	"$XDG_RUNTIME_DIR/docker.sock",
-	`\\.\pipe\docker_engine`,
-	"$HOME/.docker/run/docker.sock",
-}
-
-// returns socket path or false if not found any
-func socketLocation() (string, bool) {
-	if dockerHost, exists := os.LookupEnv("DOCKER_HOST"); exists {
-		return dockerHost, true
-	}
-
-	for _, p := range commonSocketPaths {
-		if _, err := os.Lstat(os.ExpandEnv(p)); err == nil {
-			if strings.HasPrefix(p, `\\.\`) {
-				return "npipe://" + filepath.ToSlash(os.ExpandEnv(p)), true
-			}
-			return "unix://" + filepath.ToSlash(os.ExpandEnv(p)), true
-		}
-	}
-
-	return "", false
 }

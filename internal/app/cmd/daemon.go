@@ -63,10 +63,6 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 		}
 
 		if ls.RequireDocker() {
-			// TODO: if cfg.Container.DockerHost is a TCP socket like "tcp://127.0.0.1:2375"
-			// it will pass the envcheck.CheckIfDockerRunning but can't be mounted to the job container.
-			// In this case, act_runner will mount /var/run/docker.sock by default.
-
 			dockerSocketPath, err := getDockerSocketPath(cfg.Container.DockerHost)
 			if err != nil {
 				return err
@@ -74,11 +70,21 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			if err := envcheck.CheckIfDockerRunning(ctx, dockerSocketPath); err != nil {
 				return err
 			}
+			// if dockerSocketPath passes the check, override DOCKER_HOST with dockerSocketPath
+			os.Setenv("DOCKER_HOST", dockerSocketPath)
+			// empty cfg.Container.DockerHost means act_runner need to find an available docker host automatically
+			// and assign the path to cfg.Container.DockerHost
 			if cfg.Container.DockerHost == "" {
 				cfg.Container.DockerHost = dockerSocketPath
 			}
-
-			os.Setenv("DOCKER_HOST", dockerSocketPath)
+			// check the scheme, if the scheme is not npipe or unix
+			// set cfg.Container.DockerHost to "-" because it can't be mounted to the job conatiner
+			if protoIndex := strings.Index(cfg.Container.DockerHost, "://"); protoIndex != -1 {
+				scheme := cfg.Container.DockerHost[:protoIndex]
+				if !strings.EqualFold(scheme, "npipe") && !strings.EqualFold(scheme, "unix") {
+					cfg.Container.DockerHost = "-"
+				}
+			}
 		}
 
 		cli := client.New(
