@@ -42,13 +42,14 @@ type Cache struct {
 
 // Container represents the configuration for the container.
 type Container struct {
-	Network       string   `yaml:"network"`        // Network specifies the network for the container.
-	NetworkMode   string   `yaml:"network_mode"`   // Deprecated: use Network instead. Could be removed after Gitea 1.20
-	Privileged    bool     `yaml:"privileged"`     // Privileged indicates whether the container runs in privileged mode.
-	Options       string   `yaml:"options"`        // Options specifies additional options for the container.
-	WorkdirParent string   `yaml:"workdir_parent"` // WorkdirParent specifies the parent directory for the container's working directory.
-	ValidVolumes  []string `yaml:"valid_volumes"`  // ValidVolumes specifies the volumes (including bind mounts) can be mounted to containers.
-	DockerHost    string   `yaml:"docker_host"`    // DockerHost specifies the Docker host. It overrides the value specified in environment variable DOCKER_HOST.
+	Network          string   `yaml:"network"`             // Network specifies the network for the container.
+	InheritDiverOpts []string `yaml:"inherit_driver_opts"` // InheritDiverOpts indicates the network created by act_runner whether inherit the dirver options of the default bridge network.
+	NetworkMode      string   `yaml:"network_mode"`        // Deprecated: use Network instead. Could be removed after Gitea 1.20
+	Privileged       bool     `yaml:"privileged"`          // Privileged indicates whether the container runs in privileged mode.
+	Options          string   `yaml:"options"`             // Options specifies additional options for the container.
+	WorkdirParent    string   `yaml:"workdir_parent"`      // WorkdirParent specifies the parent directory for the container's working directory.
+	ValidVolumes     []string `yaml:"valid_volumes"`       // ValidVolumes specifies the volumes (including bind mounts) can be mounted to containers.
+	DockerHost       string   `yaml:"docker_host"`         // DockerHost specifies the Docker host. It overrides the value specified in environment variable DOCKER_HOST.
 }
 
 // Host represents the configuration for the host.
@@ -141,5 +142,21 @@ func LoadDefault(file string) (*Config, error) {
 		}
 	}
 
+	var cleanDriverOptKeys []string
+	for _, key := range cfg.Container.InheritDiverOpts {
+		if _, ok := validDriverOptKeysMap[key]; ok {
+			cleanDriverOptKeys = append(cleanDriverOptKeys, key)
+		}
+	}
+	cfg.Container.InheritDiverOpts = cleanDriverOptKeys
+
 	return cfg, nil
+}
+
+var validDriverOptKeysMap = map[string]bool{
+	"com.docker.network.bridge.enable_ip_masquerade": true,
+	"com.docker.network.bridge.enable_icc":           true,
+	"com.docker.network.bridge.host_binding_ipv4":    true,
+	"com.docker.network.driver.mtu":                  true,
+	"com.docker.network.container_iface_prefix":      true,
 }
