@@ -43,7 +43,7 @@ type Cache struct {
 // Container represents the configuration for the container.
 type Container struct {
 	Network           string   `yaml:"network"`             // Network specifies the network for the container.
-	InheritDriverOpts []string `yaml:"inherit_driver_opts"` // InheritDiverOpts indicates the network created by act_runner whether inherit the dirver options of the default bridge network.
+	InheritDriverOpts []string `yaml:"inherit_driver_opts"` // InheritDiverOpts specifies which default bridge network driver options will be inherited by the network created by act_runner.
 	NetworkMode       string   `yaml:"network_mode"`        // Deprecated: use Network instead. Could be removed after Gitea 1.20
 	Privileged        bool     `yaml:"privileged"`          // Privileged indicates whether the container runs in privileged mode.
 	Options           string   `yaml:"options"`             // Options specifies additional options for the container.
