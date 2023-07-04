@@ -42,14 +42,14 @@ type Cache struct {
 
 // Container represents the configuration for the container.
 type Container struct {
-	Network          string   `yaml:"network"`             // Network specifies the network for the container.
-	InheritDiverOpts []string `yaml:"inherit_driver_opts"` // InheritDiverOpts indicates the network created by act_runner whether inherit the dirver options of the default bridge network.
-	NetworkMode      string   `yaml:"network_mode"`        // Deprecated: use Network instead. Could be removed after Gitea 1.20
-	Privileged       bool     `yaml:"privileged"`          // Privileged indicates whether the container runs in privileged mode.
-	Options          string   `yaml:"options"`             // Options specifies additional options for the container.
-	WorkdirParent    string   `yaml:"workdir_parent"`      // WorkdirParent specifies the parent directory for the container's working directory.
-	ValidVolumes     []string `yaml:"valid_volumes"`       // ValidVolumes specifies the volumes (including bind mounts) can be mounted to containers.
-	DockerHost       string   `yaml:"docker_host"`         // DockerHost specifies the Docker host. It overrides the value specified in environment variable DOCKER_HOST.
+	Network           string   `yaml:"network"`             // Network specifies the network for the container.
+	InheritDriverOpts []string `yaml:"inherit_driver_opts"` // InheritDiverOpts indicates the network created by act_runner whether inherit the dirver options of the default bridge network.
+	NetworkMode       string   `yaml:"network_mode"`        // Deprecated: use Network instead. Could be removed after Gitea 1.20
+	Privileged        bool     `yaml:"privileged"`          // Privileged indicates whether the container runs in privileged mode.
+	Options           string   `yaml:"options"`             // Options specifies additional options for the container.
+	WorkdirParent     string   `yaml:"workdir_parent"`      // WorkdirParent specifies the parent directory for the container's working directory.
+	ValidVolumes      []string `yaml:"valid_volumes"`       // ValidVolumes specifies the volumes (including bind mounts) can be mounted to containers.
+	DockerHost        string   `yaml:"docker_host"`         // DockerHost specifies the Docker host. It overrides the value specified in environment variable DOCKER_HOST.
 }
 
 // Host represents the configuration for the host.
@@ -143,12 +143,12 @@ func LoadDefault(file string) (*Config, error) {
 	}
 
 	var cleanDriverOptKeys []string
-	for _, key := range cfg.Container.InheritDiverOpts {
+	for _, key := range cfg.Container.InheritDriverOpts {
 		if _, ok := validDriverOptKeysMap[key]; ok {
 			cleanDriverOptKeys = append(cleanDriverOptKeys, key)
 		}
 	}
-	cfg.Container.InheritDiverOpts = cleanDriverOptKeys
+	cfg.Container.InheritDriverOpts = cleanDriverOptKeys
 
 	return cfg, nil
 }

@@ -201,7 +201,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		PlatformPicker:        r.labels.PickPlatform,
 		Vars:                  task.Vars,
 		ValidVolumes:          r.cfg.Container.ValidVolumes,
-		InheritDiverOpts:      r.cfg.Container.InheritDiverOpts,
+		InheritDriverOpts:     r.cfg.Container.InheritDriverOpts,
 	}
 
 	rr, err := runner.New(runnerConfig)
