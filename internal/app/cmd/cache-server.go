@@ -29,6 +29,8 @@ func runCacheServer(ctx context.Context, configFile *string, cacheArgs *cacheSer
 			return fmt.Errorf("invalid configuration: %w", err)
 		}
 
+		initLogging(cfg)
+
 		var (
 			dir  = cfg.Cache.Dir
 			host = cfg.Cache.Host
@@ -56,7 +58,7 @@ func runCacheServer(ctx context.Context, configFile *string, cacheArgs *cacheSer
 			return err
 		}
 
-		log.Infof("cache server is listening: %v", cacheHandler.ExternalURL())
+		log.Infof("cache server is listening on %v", cacheHandler.ExternalURL())
 
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
