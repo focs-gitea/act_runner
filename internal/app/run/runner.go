@@ -52,7 +52,9 @@ func NewRunner(cfg *config.Config, reg *config.Registration, cli client.Client) 
 	for k, v := range cfg.Runner.Envs {
 		envs[k] = v
 	}
-	if cfg.Cache.Enabled == nil || *cfg.Cache.Enabled {
+	if cfg.Cache.ExternalServer != "" {
+		envs["ACTIONS_CACHE_URL"] = cfg.Cache.ExternalServer
+	} else if cfg.Cache.Enabled == nil || *cfg.Cache.Enabled {
 		cacheHandler, err := artifactcache.StartHandler(
 			cfg.Cache.Dir,
 			cfg.Cache.Host,
