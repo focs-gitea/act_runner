@@ -53,17 +53,21 @@ func NewRunner(cfg *config.Config, reg *config.Registration, cli client.Client) 
 		envs[k] = v
 	}
 	if cfg.Cache.Enabled == nil || *cfg.Cache.Enabled {
-		cacheHandler, err := artifactcache.StartHandler(
-			cfg.Cache.Dir,
-			cfg.Cache.Host,
-			cfg.Cache.Port,
-			log.StandardLogger().WithField("module", "cache_request"),
-		)
-		if err != nil {
-			log.Errorf("cannot init cache server, it will be disabled: %v", err)
-			// go on
+		if cfg.Cache.ExternalServer != "" {
+			envs["ACTIONS_CACHE_URL"] = cfg.Cache.ExternalServer
 		} else {
-			envs["ACTIONS_CACHE_URL"] = cacheHandler.ExternalURL() + "/"
+			cacheHandler, err := artifactcache.StartHandler(
+				cfg.Cache.Dir,
+				cfg.Cache.Host,
+				cfg.Cache.Port,
+				log.StandardLogger().WithField("module", "cache_request"),
+			)
+			if err != nil {
+				log.Errorf("cannot init cache server, it will be disabled: %v", err)
+				// go on
+			} else {
+				envs["ACTIONS_CACHE_URL"] = cacheHandler.ExternalURL() + "/"
+			}
 		}
 	}
 
@@ -87,10 +91,9 @@ func NewRunner(cfg *config.Config, reg *config.Registration, cli client.Client) 
 func (r *Runner) Run(ctx context.Context, task *runnerv1.Task) error {
 	if _, ok := r.runningTasks.Load(task.Id); ok {
 		return fmt.Errorf("task %d is already running", task.Id)
-	} else {
-		r.runningTasks.Store(task.Id, struct{}{})
-		defer r.runningTasks.Delete(task.Id)
 	}
+	r.runningTasks.Store(task.Id, struct{}{})
+	defer r.runningTasks.Delete(task.Id)
 
 	ctx, cancel := context.WithTimeout(ctx, r.cfg.Runner.Timeout)
 	defer cancel()
