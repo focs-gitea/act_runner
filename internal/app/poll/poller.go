@@ -103,7 +103,7 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 	}
 
 	// got a task, set `tasksVersion` to zero to focre query db in next request.
-	p.tasksVersion.Store(resp.Msg.TasksVersion)
+	p.tasksVersion.Store(0)
 
 	return resp.Msg.Task, true
 }
