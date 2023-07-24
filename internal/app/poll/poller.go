@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
 	"github.com/bufbuild/connect-go"
@@ -20,13 +21,11 @@ import (
 )
 
 type Poller struct {
-	client client.Client
-	runner *run.Runner
-	cfg    *config.Config
+	client       client.Client
+	runner       *run.Runner
+	cfg          *config.Config
+	tasksVersion atomic.Int64 // tasksVersion used to store the version of the last task fetched from the Gitea.
 }
-
-// tasksVersion used to store the version of the last task fetched from the Gitea.
-var tasksVersion int64
 
 func New(cfg *config.Config, client client.Client, runner *run.Runner) *Poller {
 	return &Poller{
@@ -81,7 +80,7 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 	defer cancel()
 
 	resp, err := p.client.FetchTask(reqCtx, connect.NewRequest(&runnerv1.FetchTaskRequest{
-		TasksVersion: tasksVersion,
+		TasksVersion: p.tasksVersion.Load(),
 	}))
 	if errors.Is(err, context.DeadlineExceeded) {
 		err = nil
@@ -95,14 +94,16 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 		return nil, false
 	}
 
-	tasksVersion = resp.Msg.TasksVersion
+	if resp.Msg.TasksVersion > p.tasksVersion.Load() {
+		p.tasksVersion.Store(resp.Msg.TasksVersion)
+	}
 
 	if resp.Msg.Task == nil {
 		return nil, false
 	}
 
 	// got a task, set `tasksVersion` to zero to focre query db in next request.
-	tasksVersion = 0
+	p.tasksVersion.Store(resp.Msg.TasksVersion)
 
 	return resp.Msg.Task, true
 }
