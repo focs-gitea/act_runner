@@ -79,8 +79,10 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 	reqCtx, cancel := context.WithTimeout(ctx, p.cfg.Runner.FetchTimeout)
 	defer cancel()
 
+	// Load the version value that was in the cache when the request was initiated.
+	v := p.tasksVersion.Load()
 	resp, err := p.client.FetchTask(reqCtx, connect.NewRequest(&runnerv1.FetchTaskRequest{
-		TasksVersion: p.tasksVersion.Load(),
+		TasksVersion: v,
 	}))
 	if errors.Is(err, context.DeadlineExceeded) {
 		err = nil
@@ -94,8 +96,8 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 		return nil, false
 	}
 
-	if resp.Msg.TasksVersion > p.tasksVersion.Load() {
-		p.tasksVersion.Store(resp.Msg.TasksVersion)
+	if resp.Msg.TasksVersion > v {
+		p.tasksVersion.CompareAndSwap(v, resp.Msg.TasksVersion)
 	}
 
 	if resp.Msg.Task == nil {
@@ -103,7 +105,7 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 	}
 
 	// got a task, set `tasksVersion` to zero to focre query db in next request.
-	p.tasksVersion.Store(0)
+	p.tasksVersion.CompareAndSwap(resp.Msg.TasksVersion, 0)
 
 	return resp.Msg.Task, true
 }
