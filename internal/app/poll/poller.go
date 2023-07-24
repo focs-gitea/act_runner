@@ -53,8 +53,8 @@ func (p *Poller) poll(ctx context.Context, wg *sync.WaitGroup, limiter *rate.Lim
 func (p *Poller) pollTaskWithRateLimit(ctx context.Context, limiter *rate.Limiter) {
 	defer func() {
 		if r := recover(); r != nil {
-			// we don't know whether log will panic, so just use fmt
-			fmt.Printf("panic: %v\n", r)
+			err := fmt.Errorf("panic: %v", r)
+			log.WithError(err).Error("panic in pollTaskWithRateLimit")
 		}
 	}()
 
