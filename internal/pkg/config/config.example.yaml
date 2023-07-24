@@ -1,5 +1,8 @@
 # Example configuration file, it's safe to copy this as the default config file without any modification.
 
+# You don't have to copy this file to your instance,
+# just run `./act_runner generate-config > config.yaml` to generate a config file.
+
 log:
   # The level of logging, can be trace, debug, info, warn, error, fatal
   level: info
@@ -45,6 +48,10 @@ cache:
   # The port of the cache server.
   # 0 means to use a random available port.
   port: 0
+  # The external cache server URL. Valid only when enable is true.
+  # If it's specified, act_runner will use this URL as the ACTIONS_CACHE_URL rather than start a server by itself.
+  # The URL should generally end with "/".
+  external_server: ""
 
 container:
   # Specifies the network to which the container will connect.

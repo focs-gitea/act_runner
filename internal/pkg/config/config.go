@@ -34,10 +34,11 @@ type Runner struct {
 
 // Cache represents the configuration for caching.
 type Cache struct {
-	Enabled *bool  `yaml:"enabled"` // Enabled indicates whether caching is enabled. It is a pointer to distinguish between false and not set. If not set, it will be true.
-	Dir     string `yaml:"dir"`     // Dir specifies the directory path for caching.
-	Host    string `yaml:"host"`    // Host specifies the caching host.
-	Port    uint16 `yaml:"port"`    // Port specifies the caching port.
+	Enabled        *bool  `yaml:"enabled"`         // Enabled indicates whether caching is enabled. It is a pointer to distinguish between false and not set. If not set, it will be true.
+	Dir            string `yaml:"dir"`             // Dir specifies the directory path for caching.
+	Host           string `yaml:"host"`            // Host specifies the caching host.
+	Port           uint16 `yaml:"port"`            // Port specifies the caching port.
+	ExternalServer string `yaml:"external_server"` // ExternalServer specifies the URL of external cache server
 }
 
 // Container represents the configuration for the container.
@@ -119,7 +120,7 @@ func LoadDefault(file string) (*Config, error) {
 	}
 	if cfg.Host.WorkdirParent == "" {
 		home, _ := os.UserHomeDir()
-		cfg.Container.WorkdirParent = filepath.Join(home, ".cache", "act")
+		cfg.Host.WorkdirParent = filepath.Join(home, ".cache", "act")
 	}
 	if cfg.Runner.FetchTimeout <= 0 {
 		cfg.Runner.FetchTimeout = 5 * time.Second
