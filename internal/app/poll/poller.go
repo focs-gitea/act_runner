@@ -79,7 +79,7 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 	reqCtx, cancel := context.WithTimeout(ctx, p.cfg.Runner.FetchTimeout)
 	defer cancel()
 
-	// Load the version value that was in the cache when the request was initiated.
+	// Load the version value that was in the cache when the request was sent.
 	v := p.tasksVersion.Load()
 	resp, err := p.client.FetchTask(reqCtx, connect.NewRequest(&runnerv1.FetchTaskRequest{
 		TasksVersion: v,
