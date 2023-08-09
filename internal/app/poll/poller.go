@@ -6,7 +6,9 @@ package poll
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
+	"sync/atomic"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
 	"github.com/bufbuild/connect-go"
@@ -19,9 +21,10 @@ import (
 )
 
 type Poller struct {
-	client client.Client
-	runner *run.Runner
-	cfg    *config.Config
+	client       client.Client
+	runner       *run.Runner
+	cfg          *config.Config
+	tasksVersion atomic.Int64 // tasksVersion used to store the version of the last task fetched from the Gitea.
 }
 
 func New(cfg *config.Config, client client.Client, runner *run.Runner) *Poller {
@@ -55,9 +58,20 @@ func (p *Poller) poll(ctx context.Context, wg *sync.WaitGroup, limiter *rate.Lim
 		if !ok {
 			continue
 		}
-		if err := p.runner.Run(ctx, task); err != nil {
-			log.WithError(err).Error("failed to run task")
+		p.runTaskWithRecover(ctx, task)
+	}
+}
+
+func (p *Poller) runTaskWithRecover(ctx context.Context, task *runnerv1.Task) {
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Errorf("panic: %v", r)
+			log.WithError(err).Error("panic in runTaskWithRecover")
 		}
+	}()
+
+	if err := p.runner.Run(ctx, task); err != nil {
+		log.WithError(err).Error("failed to run task")
 	}
 }
 
@@ -65,7 +79,11 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 	reqCtx, cancel := context.WithTimeout(ctx, p.cfg.Runner.FetchTimeout)
 	defer cancel()
 
-	resp, err := p.client.FetchTask(reqCtx, connect.NewRequest(&runnerv1.FetchTaskRequest{}))
+	// Load the version value that was in the cache when the request was sent.
+	v := p.tasksVersion.Load()
+	resp, err := p.client.FetchTask(reqCtx, connect.NewRequest(&runnerv1.FetchTaskRequest{
+		TasksVersion: v,
+	}))
 	if errors.Is(err, context.DeadlineExceeded) {
 		err = nil
 	}
@@ -74,8 +92,20 @@ func (p *Poller) fetchTask(ctx context.Context) (*runnerv1.Task, bool) {
 		return nil, false
 	}
 
-	if resp == nil || resp.Msg == nil || resp.Msg.Task == nil {
+	if resp == nil || resp.Msg == nil {
 		return nil, false
 	}
+
+	if resp.Msg.TasksVersion > v {
+		p.tasksVersion.CompareAndSwap(v, resp.Msg.TasksVersion)
+	}
+
+	if resp.Msg.Task == nil {
+		return nil, false
+	}
+
+	// got a task, set `tasksVersion` to zero to focre query db in next request.
+	p.tasksVersion.CompareAndSwap(resp.Msg.TasksVersion, 0)
+
 	return resp.Msg.Task, true
 }
