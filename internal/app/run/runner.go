@@ -121,7 +121,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 	}()
 	ctx, fatal := context.WithCancel(ctx)
 	defer fatal()
-	if r.Config.Runner.Capacity == 1 {
+	if r.cfg.Runner.Capacity == 1 {
 		model.OnDecodeNodeError = func(node yaml.Node, out interface{}, err error) {
 			msg := fmt.Sprintf("Failed to decode node %v into %T: %v", node, out, err)
 			reporter.Logf("%s", msg)
