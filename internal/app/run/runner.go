@@ -20,6 +20,7 @@ import (
 	"github.com/nektos/act/pkg/model"
 	"github.com/nektos/act/pkg/runner"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 
 	"gitea.com/gitea/act_runner/internal/pkg/client"
 	"gitea.com/gitea/act_runner/internal/pkg/config"
@@ -118,6 +119,16 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 			err = fmt.Errorf("panic: %v", r)
 		}
 	}()
+	ctx, fatal := context.WithCancel(ctx)
+	defer fatal()
+	if r.Config.Runner.Capacity == 1 {
+		model.OnDecodeNodeError = func(node yaml.Node, out interface{}, err error) {
+			msg := fmt.Sprintf("Failed to decode node %v into %T: %v", node, out, err)
+			reporter.Logf("%s", msg)
+			log.Errorf("%s", msg)
+			fatal()
+		}
+	}
 
 	reporter.Logf("%s(version:%s) received task %v of job %v, be triggered by event: %s", r.name, ver.Version(), task.Id, task.Context.Fields["job"].GetStringValue(), task.Context.Fields["event_name"].GetStringValue())
 
