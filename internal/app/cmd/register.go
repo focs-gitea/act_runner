@@ -73,6 +73,7 @@ type registerArgs struct {
 	NoInteractive bool
 	InstanceAddr  string
 	Token         string
+	TokenFile     string
 	RunnerName    string
 	Labels        string
 }
@@ -250,13 +251,26 @@ func printStageHelp(stage registerStage) {
 }
 
 func registerNoInteractive(ctx context.Context, configFile string, regArgs *registerArgs) error {
+	var token string
 	cfg, err := config.LoadDefault(configFile)
 	if err != nil {
 		return err
 	}
+	if regArgs.Token == "" && regArgs.TokenFile == "" {
+		return fmt.Errorf("Missing Token argument. token or token-file should be set.")
+	}
+	if regArgs.TokenFile != "" {
+		token_bytes, err := os.ReadFile(regArgs.TokenFile)
+		if err != nil {
+			return fmt.Errorf("Cannot read the token file: %s", regArgs.TokenFile, err)
+		}
+		token = string(token_bytes)
+	} else {
+		token = regArgs.Token
+	}
 	inputs := &registerInputs{
 		InstanceAddr: regArgs.InstanceAddr,
-		Token:        regArgs.Token,
+		Token:        token,
 		RunnerName:   regArgs.RunnerName,
 		Labels:       defaultLabels,
 	}
