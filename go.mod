@@ -4,18 +4,18 @@ go 1.21
 
 require (
 	code.gitea.io/actions-proto-go v0.3.1
-	code.gitea.io/gitea-vet v0.2.3-0.20230113022436-2b1561217fa5
+	code.gitea.io/gitea-vet v0.2.3
 	github.com/avast/retry-go/v4 v4.5.0
 	github.com/bufbuild/connect-go v1.10.0
-	github.com/docker/docker v24.0.6+incompatible
+	github.com/docker/docker v24.0.7+incompatible
 	github.com/joho/godotenv v1.5.1
-	github.com/mattn/go-isatty v0.0.19
+	github.com/mattn/go-isatty v0.0.20
 	github.com/nektos/act v0.2.51
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/term v0.13.0
-	golang.org/x/time v0.3.0
+	golang.org/x/time v0.4.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools/v3 v3.5.1
