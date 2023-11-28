@@ -6,7 +6,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"gitea.com/gitea/act_runner/internal/pkg/helpers"
 	"os"
+	"os/user"
 
 	"github.com/spf13/cobra"
 
@@ -23,8 +25,15 @@ func Execute(ctx context.Context) {
 		Version:      ver.Version(),
 		SilenceUsage: true,
 	}
+
 	configFile := ""
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Config file path")
+
+	workingDirectory := ""
+	rootCmd.PersistentFlags().StringVarP(&workingDirectory, "working-directory", "d", helpers.GetCurrentWorkingDirectory(), "Specify custom root directory where all data are stored")
+
+	daemonUser := ""
+	rootCmd.PersistentFlags().StringVarP(&daemonUser, "user", "u", getCurrentUserName(), "Specify user-name to run the daemon service as")
 
 	// ./act_runner register
 	var regArgs registerArgs
@@ -45,10 +54,32 @@ func Execute(ctx context.Context) {
 	daemonCmd := &cobra.Command{
 		Use:   "daemon",
 		Short: "Run as a runner daemon",
-		Args:  cobra.MaximumNArgs(1),
-		RunE:  runDaemon(ctx, &configFile),
+		Args:  cobra.MaximumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return daemon(cmd, ctx, &configFile, &workingDirectory, &daemonUser)
+		},
 	}
 	rootCmd.AddCommand(daemonCmd)
+
+	// ./act_runner daemon install
+	installDaemonCmd := &cobra.Command{
+		Use:   "install",
+		Short: "Install the daemon",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return daemon(cmd, ctx, &configFile, &workingDirectory, &daemonUser)
+		},
+	}
+	daemonCmd.AddCommand(installDaemonCmd)
+
+	// ./act_runner daemon uninstall
+	uninstallDaemonCmd := &cobra.Command{
+		Use:   "uninstall",
+		Short: "Uninstall the daemon",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return daemon(cmd, ctx, &configFile, &workingDirectory, &daemonUser)
+		},
+	}
+	daemonCmd.AddCommand(uninstallDaemonCmd)
 
 	// ./act_runner exec
 	rootCmd.AddCommand(loadExecCmd(ctx))
@@ -82,4 +113,12 @@ func Execute(ctx context.Context) {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+}
+
+func getCurrentUserName() string {
+	user, _ := user.Current()
+	if user != nil {
+		return user.Username
+	}
+	return ""
 }
