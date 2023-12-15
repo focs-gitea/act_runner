@@ -52,6 +52,7 @@ cache:
   # If it's specified, act_runner will use this URL as the ACTIONS_CACHE_URL rather than start a server by itself.
   # The URL should generally end with "/".
   external_server: ""
+  offline_mode: false
 
 container:
   # Specifies the network to which the container will connect.

@@ -39,6 +39,7 @@ type Cache struct {
 	Host           string `yaml:"host"`            // Host specifies the caching host.
 	Port           uint16 `yaml:"port"`            // Port specifies the caching port.
 	ExternalServer string `yaml:"external_server"` // ExternalServer specifies the URL of external cache server
+	OfflineMode    bool   `yaml:"offline_mode"`
 }
 
 // Container represents the configuration for the container.
