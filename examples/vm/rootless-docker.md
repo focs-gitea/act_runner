@@ -26,7 +26,7 @@ As the `rootless` user:
 ```bash
  export XDG_RUNTIME_DIR=/home/rootless/.docker/run
  export PATH=/home/rootless/bin:$PATH
- export DOCKER_HOST=unix:///run/user/1001/docker.sock
+ export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
 ```
 
 - Reboot. Ensure that the Docker process is working.
