@@ -11,6 +11,7 @@ As `root`:
 ```bash
  useradd -m rootless
  passwd rootless
+ apt-get install -y uidmap # Not mentioned but needed for docker rootless.
 ```
 
 - Install [`docker-ce`](https://docs.docker.com/engine/install/)
