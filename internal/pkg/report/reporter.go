@@ -47,6 +47,9 @@ func NewReporter(ctx context.Context, cancel context.CancelFunc, client client.C
 	if v := task.Context.Fields["token"].GetStringValue(); v != "" {
 		oldnew = append(oldnew, v, "***")
 	}
+	if v := task.Context.Fields["gitea_runtime_token"].GetStringValue(); v != "" {
+		oldnew = append(oldnew, v, "***")
+	}
 	for _, v := range task.Secrets {
 		oldnew = append(oldnew, v, "***")
 	}
@@ -111,6 +114,9 @@ func (r *Reporter) Fire(entry *log.Entry) error {
 				for _, s := range r.state.Steps {
 					if s.Result == runnerv1.Result_RESULT_UNSPECIFIED {
 						s.Result = runnerv1.Result_RESULT_CANCELLED
+						if jobResult == runnerv1.Result_RESULT_SKIPPED {
+							s.Result = runnerv1.Result_RESULT_SKIPPED
+						}
 					}
 				}
 			}
