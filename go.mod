@@ -3,10 +3,10 @@ module gitea.com/gitea/act_runner
 go 1.21
 
 require (
-	code.gitea.io/actions-proto-go v0.3.1
+	code.gitea.io/actions-proto-go v0.4.0
 	code.gitea.io/gitea-vet v0.2.3
+	connectrpc.com/connect v1.15.0
 	github.com/avast/retry-go/v4 v4.5.1
-	github.com/bufbuild/connect-go v1.10.0
 	github.com/docker/docker v25.0.3+incompatible
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-isatty v0.0.20
