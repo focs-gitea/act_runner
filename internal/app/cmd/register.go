@@ -179,7 +179,7 @@ func (r *registerInputs) assignToNext(stage registerStage, value string, cfg *co
 		}
 
 		if validateLabels(r.Labels) != nil {
-			log.Infoln("Invalid labels, please input again, leave blank to use the default labels (for example, ubuntu-20.04:docker://node:16-bullseye,ubuntu-18.04:docker://node:16-buster,linux_arm:host)")
+			log.Infoln("Invalid labels, please input again, leave blank to use the default labels (for example, docker://node:18-bookworm,ubuntu-22.04:docker://node:18-bookworm,ubuntu-20.04:docker://node:18-bullseye,ubuntu-18.04:docker://node:18-buster)")
 			return StageInputLabels
 		}
 		return StageWaitingForRegistration
@@ -243,7 +243,7 @@ func printStageHelp(stage registerStage) {
 		hostname, _ := os.Hostname()
 		log.Infof("Enter the runner name (if set empty, use hostname: %s):\n", hostname)
 	case StageInputLabels:
-		log.Infoln("Enter the runner labels, leave blank to use the default labels (comma-separated, for example, ubuntu-20.04:docker://node:16-bullseye,ubuntu-18.04:docker://node:16-buster,linux_arm:host):")
+		log.Infoln("Enter the runner labels, leave blank to use the default labels (comma-separated, for example, docker://node:18-bookworm,ubuntu-22.04:docker://node:18-bookworm,ubuntu-20.04:docker://node:18-bullseye,ubuntu-18.04:docker://node:18-buster):")
 	case StageWaitingForRegistration:
 		log.Infoln("Waiting for registration...")
 	}
