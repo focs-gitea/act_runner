@@ -88,7 +88,7 @@ container:
   # If it's not empty or "-", the specified docker host will be used. An error will be returned if it doesn't work.
   docker_host: ""
   # Pull docker image(s) even if already present
-  force_pull: false
+  force_pull: true
   # Rebuild docker image(s) even if already present
   force_rebuild: false
 
