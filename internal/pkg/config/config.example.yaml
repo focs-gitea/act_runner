@@ -31,6 +31,7 @@ runner:
   fetch_interval: 2s
   # The labels of a runner are used to determine which jobs the runner can run, and how to run them.
   # Like: "macos-arm64:host" or "ubuntu-latest:docker://gitea/runner-images:ubuntu-latest"
+  # Find more images provided by Gitea at https://gitea.com/gitea/runner-images .
   # If it's empty when registering, it will ask for inputting labels.
   # If it's empty when execute `daemon`, will use labels in `.runner` file.
   labels:

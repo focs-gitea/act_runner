@@ -101,6 +101,8 @@ You can specify the configuration file path with `-c`/`--config` argument.
 ./act_runner -c config.yaml daemon # run with config file
 ```
 
+You can read the latest version of the configuration file online at [config.example.yaml](internal/pkg/config/config.example.yaml).
+
 ### Example Deployments
 
 Check out the [examples](examples) directory for sample deployment types.
