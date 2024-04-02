@@ -108,7 +108,7 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 		runner := run.NewRunner(cfg, reg, cli)
 
 		// declare the labels of the runner before fetching tasks
-		resp, err := runner.Declare(ctx, reg.Labels)
+		resp, err := runner.Declare(ctx, ls.Names())
 		if err != nil && connect.CodeOf(err) == connect.CodeUnimplemented {
 			log.Errorf("Your Gitea version is too old to support runner declare, please upgrade to v1.21 or later")
 			return err
