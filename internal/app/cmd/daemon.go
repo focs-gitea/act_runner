@@ -122,9 +122,12 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 
 		poller := poll.New(cfg, cli, runner)
 
-		poller.Poll(ctx)
+		go poller.Poll()
 
-		return nil
+		<-ctx.Done()
+		log.Infof("runner: %s gracefully shutting down", resp.Msg.Runner.Name)
+
+		return poller.Shutdown(context.Background())
 	}
 }
 
