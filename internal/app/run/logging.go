@@ -6,8 +6,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type NullLogger struct {}
+// NullLogger is used to create a new JobLogger to discard logs. This
+// will prevent these logs from being logged to the stdout, but
+// forward them to the Reporter via its hook.
+type NullLogger struct{}
 
+// WithJobLogger creates a new logrus.Logger that will discard all logs.
 func (n NullLogger) WithJobLogger() *log.Logger {
 	logger := log.New()
 	logger.SetOutput(io.Discard)
