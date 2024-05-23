@@ -125,9 +125,16 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 		go poller.Poll()
 
 		<-ctx.Done()
-		log.Infof("runner: %s gracefully shutting down", resp.Msg.Runner.Name)
+		log.Infof("runner: %s shutdown initiated, waiting %s for running jobs to complete before shutting down", resp.Msg.Runner.Name, cfg.Runner.ShutdownTimeout)
 
-		return poller.Shutdown(context.Background())
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Runner.ShutdownTimeout)
+		defer cancel()
+
+		err = poller.Shutdown(ctx)
+		if err != nil {
+			log.Warnf("runner: %s cancelled in progress jobs during shutdown", resp.Msg.Runner.Name)
+		}
+		return nil
 	}
 }
 

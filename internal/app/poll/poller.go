@@ -74,14 +74,27 @@ func (p *Poller) Shutdown(ctx context.Context) error {
 	p.shutdownPolling()
 
 	select {
-	// gracefully shutdown
+	// graceful shutdown completed succesfully
 	case <-p.done:
 		return nil
 
-	// Our timeout for shutting down ran out
+	// our timeout for shutting down ran out
 	case <-ctx.Done():
+		// when both the timeout fires and the graceful shutdown
+		// completed succsfully, this branch of the select may
+		// fire. Do a non-blocking check here against the graceful
+		// shutdown status to avoid sending an error if we don't need to.
+		_, ok := <-p.done
+		if !ok {
+			return nil
+		}
+
 		// force a shutdown of all running jobs
 		p.shutdownJobs()
+
+		// wait for running jobs to report their status to Gitea
+		_, _ = <-p.done
+
 		return ctx.Err()
 	}
 }
