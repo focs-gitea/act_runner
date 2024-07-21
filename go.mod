@@ -7,10 +7,10 @@ require (
 	code.gitea.io/gitea-vet v0.2.3
 	connectrpc.com/connect v1.16.2
 	github.com/avast/retry-go/v4 v4.6.0
-	github.com/docker/docker v27.0.3+incompatible
+	github.com/docker/docker v25.0.3+incompatible
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-isatty v0.0.20
-	github.com/nektos/act v0.2.64 // will be replaced
+	github.com/nektos/act v0.0.0 // will be replaced
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
@@ -28,13 +28,13 @@ require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.0.0 // indirect
 	github.com/cloudflare/circl v1.3.9 // indirect
-	github.com/containerd/containerd v1.7.20 // indirect
+	github.com/containerd/containerd v1.7.13 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/creack/pty v1.1.21 // indirect
 	github.com/cyphar/filepath-securejoin v0.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/cli v27.0.3+incompatible // indirect
+	github.com/distribution/reference v0.5.0 // indirect
+	github.com/docker/cli v25.0.3+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
@@ -47,7 +47,6 @@ require (
 	github.com/go-git/go-git/v5 v5.12.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-viper/mapstructure/v2 v2.0.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -62,10 +61,10 @@ require (
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/moby/buildkit v0.15.0 // indirect
-	github.com/moby/docker-image-spec v1.3.1 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/moby/buildkit v0.12.5 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
-	github.com/moby/sys/sequential v0.6.0 // indirect
+	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
