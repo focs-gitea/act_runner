@@ -27,6 +27,8 @@ type Runner struct {
 	EnvFile       string            `yaml:"env_file"`       // EnvFile specifies the path to the file containing environment variables for the runner.
 	Timeout       time.Duration     `yaml:"timeout"`        // Timeout specifies the duration for runner timeout.
 	Insecure      bool              `yaml:"insecure"`       // Insecure indicates whether the runner operates in an insecure mode.
+	Clientcert    string            `yaml:"clientcert"`     // Clientcert specifies the path to the client certificate for autentication.
+	Clientkey     string            `yaml:"clientkey"`      // Clientkey specifies the path to the client key for authentication.
 	FetchTimeout  time.Duration     `yaml:"fetch_timeout"`  // FetchTimeout specifies the timeout duration for fetching resources.
 	FetchInterval time.Duration     `yaml:"fetch_interval"` // FetchInterval specifies the interval duration for fetching resources.
 	Labels        []string          `yaml:"labels"`         // Labels specifies the labels of the runner. Labels are declared on each startup

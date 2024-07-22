@@ -91,6 +91,8 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 		cli := client.New(
 			reg.Address,
 			cfg.Runner.Insecure,
+			cfg.Runner.Clientcert,
+			cfg.Runner.Clientkey,
 			reg.UUID,
 			reg.Token,
 			ver.Version(),

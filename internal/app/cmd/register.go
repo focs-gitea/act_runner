@@ -293,6 +293,8 @@ func doRegister(ctx context.Context, cfg *config.Config, inputs *registerInputs)
 	cli := client.New(
 		inputs.InstanceAddr,
 		cfg.Runner.Insecure,
+		cfg.Runner.Clientcert,
+		cfg.Runner.Clientkey,
 		"",
 		"",
 		ver.Version(),
