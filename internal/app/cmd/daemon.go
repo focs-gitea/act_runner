@@ -4,12 +4,8 @@
 package cmd
 
 import (
-	"connectrpc.com/connect"
 	"context"
 	"fmt"
-	"github.com/mattn/go-isatty"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"os"
 	"path"
 	"path/filepath"
@@ -17,6 +13,11 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"connectrpc.com/connect"
+	"github.com/mattn/go-isatty"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 
 	"gitea.com/gitea/act_runner/internal/app/poll"
 	"gitea.com/gitea/act_runner/internal/app/run"
