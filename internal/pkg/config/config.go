@@ -21,15 +21,16 @@ type Log struct {
 
 // Runner represents the configuration for the runner.
 type Runner struct {
-	File          string            `yaml:"file"`           // File specifies the file path for the runner.
-	Capacity      int               `yaml:"capacity"`       // Capacity specifies the capacity of the runner.
-	Envs          map[string]string `yaml:"envs"`           // Envs stores environment variables for the runner.
-	EnvFile       string            `yaml:"env_file"`       // EnvFile specifies the path to the file containing environment variables for the runner.
-	Timeout       time.Duration     `yaml:"timeout"`        // Timeout specifies the duration for runner timeout.
-	Insecure      bool              `yaml:"insecure"`       // Insecure indicates whether the runner operates in an insecure mode.
-	FetchTimeout  time.Duration     `yaml:"fetch_timeout"`  // FetchTimeout specifies the timeout duration for fetching resources.
-	FetchInterval time.Duration     `yaml:"fetch_interval"` // FetchInterval specifies the interval duration for fetching resources.
-	Labels        []string          `yaml:"labels"`         // Labels specifies the labels of the runner. Labels are declared on each startup
+	File            string            `yaml:"file"`             // File specifies the file path for the runner.
+	Capacity        int               `yaml:"capacity"`         // Capacity specifies the capacity of the runner.
+	Envs            map[string]string `yaml:"envs"`             // Envs stores environment variables for the runner.
+	EnvFile         string            `yaml:"env_file"`         // EnvFile specifies the path to the file containing environment variables for the runner.
+	Timeout         time.Duration     `yaml:"timeout"`          // Timeout specifies the duration for runner timeout.
+	ShutdownTimeout time.Duration     `yaml:"shutdown_timeout"` // ShutdownTimeout specifies the duration to wait for running jobs to complete during a shutdown of the runner.
+	Insecure        bool              `yaml:"insecure"`         // Insecure indicates whether the runner operates in an insecure mode.
+	FetchTimeout    time.Duration     `yaml:"fetch_timeout"`    // FetchTimeout specifies the timeout duration for fetching resources.
+	FetchInterval   time.Duration     `yaml:"fetch_interval"`   // FetchInterval specifies the interval duration for fetching resources.
+	Labels          []string          `yaml:"labels"`           // Labels specify the labels of the runner. Labels are declared on each startup
 }
 
 // Cache represents the configuration for caching.
@@ -51,6 +52,7 @@ type Container struct {
 	ValidVolumes  []string `yaml:"valid_volumes"`  // ValidVolumes specifies the volumes (including bind mounts) can be mounted to containers.
 	DockerHost    string   `yaml:"docker_host"`    // DockerHost specifies the Docker host. It overrides the value specified in environment variable DOCKER_HOST.
 	ForcePull     bool     `yaml:"force_pull"`     // Pull docker image(s) even if already present
+	ForceRebuild  bool     `yaml:"force_rebuild"`  // Rebuild docker image(s) even if already present
 }
 
 // Host represents the configuration for the host.
@@ -87,6 +89,9 @@ func LoadDefault(file string) (*Config, error) {
 			envs, err := godotenv.Read(cfg.Runner.EnvFile)
 			if err != nil {
 				return nil, fmt.Errorf("read env file %q: %w", cfg.Runner.EnvFile, err)
+			}
+			if cfg.Runner.Envs == nil {
+				cfg.Runner.Envs = map[string]string{}
 			}
 			for k, v := range envs {
 				cfg.Runner.Envs[k] = v

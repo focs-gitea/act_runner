@@ -10,10 +10,11 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -88,6 +89,14 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 			}
 		}
 
+		if !slices.Equal(reg.Labels, ls.ToStrings()) {
+			reg.Labels = ls.ToStrings()
+			if err := config.SaveRegistration(cfg.Runner.File, reg); err != nil {
+				return fmt.Errorf("failed to save runner config: %w", err)
+			}
+			log.Infof("labels updated to: %v", reg.Labels)
+		}
+
 		cli := client.New(
 			reg.Address,
 			cfg.Runner.Insecure,
@@ -97,28 +106,34 @@ func runDaemon(ctx context.Context, configFile *string) func(cmd *cobra.Command,
 		)
 
 		runner := run.NewRunner(cfg, reg, cli)
+
 		// declare the labels of the runner before fetching tasks
 		resp, err := runner.Declare(ctx, ls.Names())
 		if err != nil && connect.CodeOf(err) == connect.CodeUnimplemented {
-			// Gitea instance is older version. skip declare step.
-			log.Warn("Because the Gitea instance is an old version, skip declare labels and version.")
+			log.Errorf("Your Gitea version is too old to support runner declare, please upgrade to v1.21 or later")
+			return err
 		} else if err != nil {
 			log.WithError(err).Error("fail to invoke Declare")
 			return err
 		} else {
 			log.Infof("runner: %s, with version: %s, with labels: %v, declare successfully",
 				resp.Msg.Runner.Name, resp.Msg.Runner.Version, resp.Msg.Runner.Labels)
-			// if declare successfully, override the labels in the.runner file with valid labels in the config file (if specified)
-			reg.Labels = ls.ToStrings()
-			if err := config.SaveRegistration(cfg.Runner.File, reg); err != nil {
-				return fmt.Errorf("failed to save runner config: %w", err)
-			}
 		}
 
 		poller := poll.New(cfg, cli, runner)
 
-		poller.Poll(ctx)
+		go poller.Poll()
 
+		<-ctx.Done()
+		log.Infof("runner: %s shutdown initiated, waiting %s for running jobs to complete before shutting down", resp.Msg.Runner.Name, cfg.Runner.ShutdownTimeout)
+
+		ctx, cancel := context.WithTimeout(context.Background(), cfg.Runner.ShutdownTimeout)
+		defer cancel()
+
+		err = poller.Shutdown(ctx)
+		if err != nil {
+			log.Warnf("runner: %s cancelled in progress jobs during shutdown", resp.Msg.Runner.Name)
+		}
 		return nil
 	}
 }

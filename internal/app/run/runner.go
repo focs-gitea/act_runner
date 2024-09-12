@@ -13,7 +13,7 @@ import (
 	"time"
 
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/docker/docker/api/types/container"
 	"github.com/nektos/act/pkg/artifactcache"
 	"github.com/nektos/act/pkg/common"
@@ -74,6 +74,7 @@ func NewRunner(cfg *config.Config, reg *config.Registration, cli client.Client) 
 	// set artifact gitea api
 	artifactGiteaAPI := strings.TrimSuffix(cli.Address(), "/") + "/api/actions_pipeline/"
 	envs["ACTIONS_RUNTIME_URL"] = artifactGiteaAPI
+	envs["ACTIONS_RESULTS_URL"] = strings.TrimSuffix(cli.Address(), "/")
 
 	// Set specific environments to distinguish between Gitea and GitHub
 	envs["GITEA_ACTIONS"] = "true"
@@ -162,8 +163,12 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		preset.Token = t
 	}
 
-	// use task token to action api token
-	r.envs["ACTIONS_RUNTIME_TOKEN"] = preset.Token
+	giteaRuntimeToken := taskContext["gitea_runtime_token"].GetStringValue()
+	if giteaRuntimeToken == "" {
+		// use task token to action api token for previous Gitea Server Versions
+		giteaRuntimeToken = preset.Token
+	}
+	r.envs["ACTIONS_RUNTIME_TOKEN"] = giteaRuntimeToken
 
 	eventJSON, err := json.Marshal(preset.Event)
 	if err != nil {
@@ -178,13 +183,13 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 	runnerConfig := &runner.Config{
 		// On Linux, Workdir will be like "/<parent_directory>/<owner>/<repo>"
 		// On Windows, Workdir will be like "\<parent_directory>\<owner>\<repo>"
-		Workdir:        filepath.FromSlash(fmt.Sprintf("/%s/%s", r.cfg.Container.WorkdirParent, preset.Repository)),
+		Workdir:        filepath.FromSlash(fmt.Sprintf("/%s/%s", strings.TrimLeft(r.cfg.Container.WorkdirParent, "/"), preset.Repository)),
 		BindWorkdir:    false,
 		ActionCacheDir: filepath.FromSlash(r.cfg.Host.WorkdirParent),
 
 		ReuseContainers:       false,
 		ForcePull:             r.cfg.Container.ForcePull,
-		ForceRebuild:          false,
+		ForceRebuild:          r.cfg.Container.ForceRebuild,
 		LogOutput:             true,
 		JSONLogger:            false,
 		Env:                   r.envs,
@@ -204,6 +209,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		PlatformPicker:        r.labels.PickPlatform,
 		Vars:                  task.Vars,
 		ValidVolumes:          r.cfg.Container.ValidVolumes,
+		InsecureSkipTLS:       r.cfg.Runner.Insecure,
 	}
 
 	rr, err := runner.New(runnerConfig)
@@ -216,6 +222,10 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 
 	// add logger recorders
 	ctx = common.WithLoggerHook(ctx, reporter)
+
+	if !log.IsLevelEnabled(log.DebugLevel) {
+		ctx = runner.WithJobLoggerFactory(ctx, NullLogger{})
+	}
 
 	execErr := executor(ctx)
 	reporter.SetOutputs(job.Outputs)

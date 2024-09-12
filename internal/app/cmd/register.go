@@ -15,7 +15,7 @@ import (
 
 	pingv1 "code.gitea.io/actions-proto-go/ping/v1"
 	runnerv1 "code.gitea.io/actions-proto-go/runner/v1"
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -92,10 +92,9 @@ const (
 )
 
 var defaultLabels = []string{
-	"ubuntu-latest:docker://node:16-bullseye",
-	"ubuntu-22.04:docker://node:16-bullseye", // There's no node:16-bookworm yet
-	"ubuntu-20.04:docker://node:16-bullseye",
-	"ubuntu-18.04:docker://node:16-buster",
+	"ubuntu-latest:docker://gitea/runner-images:ubuntu-latest",
+	"ubuntu-22.04:docker://gitea/runner-images:ubuntu-22.04",
+	"ubuntu-20.04:docker://gitea/runner-images:ubuntu-20.04",
 }
 
 type registerInputs struct {
@@ -180,7 +179,7 @@ func (r *registerInputs) assignToNext(stage registerStage, value string, cfg *co
 		}
 
 		if validateLabels(r.Labels) != nil {
-			log.Infoln("Invalid labels, please input again, leave blank to use the default labels (for example, ubuntu-20.04:docker://node:16-bullseye,ubuntu-18.04:docker://node:16-buster,linux_arm:host)")
+			log.Infoln("Invalid labels, please input again, leave blank to use the default labels (for example, ubuntu-latest:docker://gitea/runner-images:ubuntu-latest)")
 			return StageInputLabels
 		}
 		return StageWaitingForRegistration
@@ -244,7 +243,7 @@ func printStageHelp(stage registerStage) {
 		hostname, _ := os.Hostname()
 		log.Infof("Enter the runner name (if set empty, use hostname: %s):\n", hostname)
 	case StageInputLabels:
-		log.Infoln("Enter the runner labels, leave blank to use the default labels (comma-separated, for example, ubuntu-20.04:docker://node:16-bullseye,ubuntu-18.04:docker://node:16-buster,linux_arm:host):")
+		log.Infoln("Enter the runner labels, leave blank to use the default labels (comma-separated, for example, ubuntu-latest:docker://gitea/runner-images:ubuntu-latest):")
 	case StageWaitingForRegistration:
 		log.Infoln("Waiting for registration...")
 	}
