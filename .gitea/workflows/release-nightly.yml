@@ -2,9 +2,7 @@ name: release-nightly
 
 on:
   push:
-    branches:
-      - main
-      - bugfix/release # TODO: debug
+    branches: [main]
     tags:
       - "*"
 
