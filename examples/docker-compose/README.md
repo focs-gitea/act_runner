@@ -1,7 +1,7 @@
 ### Running `act_runner` using `docker-compose`
 
 ```yml
-...
+
   gitea:
     image: gitea/gitea
     ...
