@@ -1,3 +1,5 @@
+ARG DOCKER_MODE
+
 FROM golang:1.23-alpine AS builder
 
 # Do not remove `git` here, it is required for getting runner version when executing `make build`
@@ -11,14 +13,16 @@ WORKDIR /opt/src/act_runner
 
 RUN make clean && make build
 
-FROM alpine
-RUN apk add --no-cache tini bash git
+FROM docker:${DOCKER_MODE:-unknown-mode}
+
+USER root
+
+RUN apk add --no-cache s6 bash git
 
 COPY --from=builder /opt/src/act_runner/act_runner /usr/local/bin/act_runner
 COPY scripts/run.sh /usr/local/bin/run.sh
-
-VOLUME /var/run/docker.sock
+COPY scripts/s6 /etc/s6
 
 VOLUME /data
 
-ENTRYPOINT ["/sbin/tini","--","run.sh"]
+ENTRYPOINT ["s6-svscan","/etc/s6"]
