@@ -1,4 +1,4 @@
-ARG DOCKER_MODE
+ARG DIND_MODE
 
 FROM golang:1.23-alpine AS builder
 
@@ -13,7 +13,7 @@ WORKDIR /opt/src/act_runner
 
 RUN make clean && make build
 
-FROM docker:${DOCKER_MODE:-unknown-mode}
+FROM docker:${DIND_MODE:-unknown-mode}
 
 USER root
 
