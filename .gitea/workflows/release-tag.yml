@@ -73,6 +73,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          target: basic
           platforms: |
             linux/amd64
             linux/arm64
@@ -85,13 +86,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./dind.dockerfile
+          file: ./Dockerfile
+          target: dind
           platforms: |
             linux/amd64
             linux/arm64
           push: true
-          build-args: |
-            DIND_MODE=dind
           tags: |
             ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}-dind
             ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ env.DOCKER_LATEST }}-dind
@@ -100,13 +100,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./dind.dockerfile
+          file: ./Dockerfile
+          target: dind-rootless
           platforms: |
             linux/amd64
             linux/arm64
           push: true
-          build-args: |
-            DIND_MODE=dind-rootless
           tags: |
             ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}-dind-rootless
             ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ env.DOCKER_LATEST }}-dind-rootless
