@@ -3,7 +3,7 @@ name: release-tag
 on:
   push:
     tags:
-      - '*'
+      - "*"
 
 jobs:
   goreleaser:
@@ -14,7 +14,7 @@ jobs:
           fetch-depth: 0 # all history for all branches and tags
       - uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
       - name: Import GPG key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v6
@@ -23,11 +23,10 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           fingerprint: CC64B1DB67ABBEECAB24B6455FC346329753F4B0
       - name: goreleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
-            distribution: goreleaser-pro
-            version: latest
-            args: release
+          distribution: goreleaser-pro
+          args: release
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -35,7 +34,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           S3_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET: ${{ secrets.AWS_BUCKET }}
-          GORELEASER_FORCE_TOKEN: 'gitea'
+          GORELEASER_FORCE_TOKEN: "gitea"
           GITEA_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
   release-image:
@@ -67,13 +66,14 @@ jobs:
         id: meta
         run: |
           echo REPO_NAME=$(echo ${GITHUB_REPOSITORY} | awk -F"/" '{print $2}') >> $GITHUB_OUTPUT
-          echo REPO_VERSION=$(git describe --tags --always | sed 's/^v//') >> $GITHUB_OUTPUT
+          echo REPO_VERSION=${GITHUB_REF_NAME#v} >> $GITHUB_OUTPUT
 
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
+          target: basic
           platforms: |
             linux/amd64
             linux/arm64
@@ -82,13 +82,26 @@ jobs:
             ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}
             ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ env.DOCKER_LATEST }}
 
-      - name: Build and push dind-rootless
+      - name: Build and push dind
         uses: docker/build-push-action@v5
-        env:
-          ACTIONS_RUNTIME_TOKEN: '' # See https://gitea.com/gitea/act_runner/issues/119
         with:
           context: .
-          file: ./Dockerfile.rootless
+          file: ./Dockerfile
+          target: dind
+          platforms: |
+            linux/amd64
+            linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ steps.meta.outputs.REPO_VERSION }}-dind
+            ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ env.DOCKER_LATEST }}-dind
+
+      - name: Build and push dind-rootless
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: dind-rootless
           platforms: |
             linux/amd64
             linux/arm64

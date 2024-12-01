@@ -2,7 +2,9 @@ name: release-nightly
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    tags:
+      - "*"
 
 jobs:
   goreleaser:
@@ -13,12 +15,11 @@ jobs:
           fetch-depth: 0 # all history for all branches and tags
       - uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
       - name: goreleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser-pro
-          version: latest
           args: release --nightly
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
@@ -27,6 +28,8 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           S3_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET: ${{ secrets.AWS_BUCKET }}
+          GORELEASER_FORCE_TOKEN: "gitea"
+          GITEA_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   release-image:
     runs-on: ubuntu-latest
     container:
@@ -56,13 +59,14 @@ jobs:
         id: meta
         run: |
           echo REPO_NAME=$(echo ${GITHUB_REPOSITORY} | awk -F"/" '{print $2}') >> $GITHUB_OUTPUT
-          echo REPO_VERSION=$(git describe --tags --always | sed 's/^v//') >> $GITHUB_OUTPUT
+          echo REPO_VERSION=${GITHUB_REF_NAME#v} >> $GITHUB_OUTPUT
 
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
+          target: basic
           platforms: |
             linux/amd64
             linux/arm64
@@ -70,13 +74,25 @@ jobs:
           tags: |
             ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ env.DOCKER_LATEST }}
 
-      - name: Build and push dind-rootless
+      - name: Build and push dind
         uses: docker/build-push-action@v5
-        env:
-          ACTIONS_RUNTIME_TOKEN: '' # See https://gitea.com/gitea/act_runner/issues/119
         with:
           context: .
-          file: ./Dockerfile.rootless
+          file: ./Dockerfile
+          target: dind
+          platforms: |
+            linux/amd64
+            linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKER_ORG }}/${{ steps.meta.outputs.REPO_NAME }}:${{ env.DOCKER_LATEST }}-dind
+
+      - name: Build and push dind-rootless
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: dind-rootless
           platforms: |
             linux/amd64
             linux/arm64
