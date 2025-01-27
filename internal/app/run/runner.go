@@ -206,7 +206,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		ContainerDaemonSocket: r.cfg.Container.DockerHost,
 		Privileged:            r.cfg.Container.Privileged,
 		DefaultActionInstance: taskContext["gitea_default_actions_url"].GetStringValue(),
-		PlatformPicker:        r.labels.PickPlatform,
+		PlatformPicker:        r.pickPlatform,
 		Vars:                  task.Vars,
 		ValidVolumes:          r.cfg.Container.ValidVolumes,
 		InsecureSkipTLS:       r.cfg.Runner.Insecure,
@@ -237,4 +237,12 @@ func (r *Runner) Declare(ctx context.Context, labels []string) (*connect.Respons
 		Version: ver.Version(),
 		Labels:  labels,
 	}))
+}
+
+func (r *Runner) pickPlatform(labels []string) string {
+	platform := r.labels.PickPlatform(labels)
+	if platform == "" {
+		platform = r.cfg.Runner.DefaultPlatform
+	}
+	return platform
 }
