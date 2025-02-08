@@ -160,7 +160,6 @@ type daemonArgs struct {
 
 // initLogging setup the global logrus logger.
 func initLogging(cfg *config.Config) {
-
 	callPrettyfier := func(f *runtime.Frame) (string, string) {
 		// get function name
 		s := strings.Split(f.Function, ".")
