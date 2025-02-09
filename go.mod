@@ -98,4 +98,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace github.com/nektos/act => github.com/focs-gitea/act v0.261.3-focs
+replace github.com/nektos/act => github.com/focs-gitea/act v0.261.3-focs-no-image
