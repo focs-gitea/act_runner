@@ -75,11 +75,11 @@ func (l Labels) PickPlatform(runsOn []string) string {
 	//   ["with-gpu"] => "linux:with-gpu"
 	//   ["ubuntu-22.04", "with-gpu"] => "ubuntu:22.04_with-gpu"
 
-	// return default.
+	// return invalid.
 	// So the runner receives a task with a label that the runner doesn't have,
 	// it happens when the user have edited the label of the runner in the web UI.
 	// TODO: it may be not correct, what if the runner is used as host mode only?
-	return ""
+	return "invalid"
 }
 
 func (l Labels) Names() []string {
