@@ -180,6 +180,13 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		maxLifetime = time.Until(deadline)
 	}
 
+	defaultActionInstance := taskContext["gitea_default_actions_url"].GetStringValue()
+	serverURL := taskContext["server_url"].GetStringValue()
+	if defaultActionInstance == "self" || defaultActionInstance == "" ||
+		(serverURL != "" && strings.TrimSuffix(defaultActionInstance, "/") == strings.TrimSuffix(serverURL, "/")) {
+		defaultActionInstance = strings.TrimSuffix(r.client.Address(), "/")
+	}
+
 	runnerConfig := &runner.Config{
 		// On Linux, Workdir will be like "/<parent_directory>/<owner>/<repo>"
 		// On Windows, Workdir will be like "\<parent_directory>\<owner>\<repo>"
@@ -204,7 +211,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		ContainerNetworkMode:  container.NetworkMode(r.cfg.Container.Network),
 		ContainerDaemonSocket: r.cfg.Container.DockerHost,
 		Privileged:            r.cfg.Container.Privileged,
-		DefaultActionInstance: taskContext["gitea_default_actions_url"].GetStringValue(),
+		DefaultActionInstance: defaultActionInstance,
 		PlatformPicker:        r.labels.PickPlatform,
 		Vars:                  task.Vars,
 		ValidVolumes:          r.cfg.Container.ValidVolumes,
