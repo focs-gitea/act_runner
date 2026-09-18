@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -156,6 +157,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 		Token:           taskContext["token"].GetStringValue(),
 		RepositoryOwner: taskContext["repository_owner"].GetStringValue(),
 		RetentionDays:   taskContext["retention_days"].GetStringValue(),
+		ServerURL:       taskContext["server_url"].GetStringValue(),
 	}
 	if t := task.Secrets["GITEA_TOKEN"]; t != "" {
 		preset.Token = t
@@ -183,7 +185,7 @@ func (r *Runner) run(ctx context.Context, task *runnerv1.Task, reporter *report.
 	defaultActionInstance := taskContext["gitea_default_actions_url"].GetStringValue()
 	serverURL := taskContext["server_url"].GetStringValue()
 	if defaultActionInstance == "self" || defaultActionInstance == "" ||
-		(serverURL != "" && strings.TrimSuffix(defaultActionInstance, "/") == strings.TrimSuffix(serverURL, "/")) {
+		(serverURL != "" && isSameHostOrURL(defaultActionInstance, serverURL)) {
 		defaultActionInstance = strings.TrimSuffix(r.client.Address(), "/")
 	}
 
@@ -243,4 +245,36 @@ func (r *Runner) Declare(ctx context.Context, labels []string) (*connect.Respons
 		Version: ver.Version(),
 		Labels:  labels,
 	}))
+}
+
+func extractHost(rawURL string) string {
+	rawURL = strings.TrimSpace(rawURL)
+	if rawURL == "" {
+		return ""
+	}
+	if !strings.Contains(rawURL, "://") {
+		rawURL = "https://" + rawURL
+	}
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return ""
+	}
+	return strings.ToLower(u.Hostname())
+}
+
+func isSameHostOrURL(a, b string) bool {
+	if a == "" || b == "" {
+		return false
+	}
+	if strings.TrimSuffix(a, "/") == strings.TrimSuffix(b, "/") {
+		return true
+	}
+	ha, hb := extractHost(a), extractHost(b)
+	if ha != "" && ha == hb {
+		return true
+	}
+	if strings.HasSuffix(ha, ".sjtu.edu.cn") && strings.HasSuffix(hb, ".sjtu.edu.cn") {
+		return true
+	}
+	return false
 }
